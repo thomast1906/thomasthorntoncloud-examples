@@ -1,0 +1,42 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+pool: linuxtamops
+
+variables:
+  - group: production
+
+trigger: none
+
+pr: none
+
+stages :
+  - stage: test
+    jobs:
+      - job: "Checkout"
+        steps:
+          - task: UseRubyVersion@0
+            displayName: 'Install Ruby'
+            inputs:
+              versionSpec: '>= 2.5'
+              addToPath: true
+
+          - script: gem install inspec-bin
+            displayName: 'Install inspec-bin'
+                      
+          - task: Bash@3
+            displayName: 'Run inspec tests'
+            inputs:
+              targetType: inline
+              script: |
+                export AZURE_SUBSCRIPTION_ID="xxxxxxxxxxxx"
+                export AZURE_CLIENT_ID="xxxxxxxxxxxx"
+                export AZURE_CLIENT_SECRET="xxxxxxxxxxxx"
+                export AZURE_TENANT_ID="xxxxxxxxxxxx"
+                inspec exec ./azure-inspec-tests/ -t azure:// --chef-license=accept --reporter cli junit:inspectestresults.xml
+
+          - task: PublishTestResults@2
+            displayName: Publish inspec test results
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFiles: '**/inspectestresults.xml'
+              mergeTestResults: true
