@@ -1,0 +1,114 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+variables:
+  - group: azureback2school-production
+  
+resources:
+  pipelines:
+    - pipeline: Azure-Back-to-School-Production
+      source: Azure-Back-to-School-Develop
+      trigger:
+        branches:
+          include:
+            - master
+
+
+# Don't run against PRs
+pr: none
+
+stages :
+  - stage: validate
+    jobs:
+    - job: validate
+      continueOnError: false
+      steps:
+      - task: TerraformInstaller@0
+        displayName: 'install'
+        inputs:
+          terraformVersion: '0.13.3'
+      - task: TerraformTaskV1@0
+        displayName: 'init'
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          backendServiceArm: 'tamopstf'
+          backendAzureRmResourceGroupName: 'tamopstf'
+          backendAzureRmStorageAccountName: 'thomastfstate'
+          backendAzureRmContainerName: 'tamopsazurebacktoschool'
+          backendAzureRmKey: 'terraform.tfstate'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+      - task: TerraformTaskV1@0
+        displayName: 'validate'
+        inputs:
+          provider: 'azurerm'
+          command: 'validate'
+          
+  - stage: plan
+    dependsOn: [validate]
+    condition: succeeded('validate')
+    jobs:
+      - job: terraform_apply_production
+        steps:
+              - checkout: self
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: '0.13.3'
+              - task: TerraformTaskV1@0
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  backendServiceArm: 'tamopstf'
+                  backendAzureRmResourceGroupName: 'tamopstf'
+                  backendAzureRmStorageAccountName: 'thomastfstate'
+                  backendAzureRmContainerName: 'tamopsazurebacktoschool'
+                  backendAzureRmKey: 'terraform.tfstate'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              - task: TerraformTaskV1@0
+                displayName: 'plan'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'plan'
+                  commandOptions: '-input=false -var-file="../$(Environment)/$(Environment).tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+  - stage: apply
+    dependsOn: [plan]
+    condition: succeeded('plan')
+    jobs:
+      - job: terraform_plan_production
+        steps:
+              - checkout: self
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: '0.13.3'
+              - task: TerraformTaskV1@0
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  backendServiceArm: 'tamopstf'
+                  backendAzureRmResourceGroupName: 'tamopstf'
+                  backendAzureRmStorageAccountName: 'thomastfstate'
+                  backendAzureRmContainerName: 'tamopsazurebacktoschool'
+                  backendAzureRmKey: 'terraform.tfstate'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              - task: TerraformTaskV1@0
+                displayName: 'plan'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'plan'
+                  commandOptions: '-input=false -var-file="../$(Environment)/$(Environment).tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              - task: TerraformTaskV1@0
+                displayName: 'apply'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'apply'
+                  commandOptions: '-input=false -auto-approve -var-file="../$(Environment)/$(Environment).tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
