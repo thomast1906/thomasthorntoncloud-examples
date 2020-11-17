@@ -1,0 +1,26 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        
+        "vnetName": {
+            "value": "tamops-vnet"
+        },
+        "vnetAddressPrefix": {
+            "value": "10.0.0.0/16"
+        },
+        "subnet1Prefix": {
+            "value": "10.0.0.0/24"
+        },
+        "subnet1Name": {
+            "value": "Subnet1"
+        },
+        "subnet2Prefix": {
+            "value": "10.0.1.0/24"
+        },
+        "subnet2Name": {
+            "value": "Subnet2"
+        }
+        
+  }
+}
