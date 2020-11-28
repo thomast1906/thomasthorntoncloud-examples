@@ -1,0 +1,154 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+variables:
+  - group: azurefestivecalendar-dr
+  
+pool: linuxtamops
+
+trigger: none 
+resources:
+  pipelines:
+    - pipeline: Azure-Festive-Calendar-DR 
+      source: Azure-Festive-Calendar-Production  
+      trigger:
+        branches:
+          include:
+            - main       
+
+
+# Don't run against PRs
+pr: none
+
+stages :
+  - stage: validate
+    jobs:
+    - job: validate
+      continueOnError: false
+      steps:
+      - task: TerraformInstaller@0
+        displayName: 'install'
+        inputs:
+          terraformVersion: '0.13.4'
+      - task: TerraformTaskV1@0
+        displayName: 'init'
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          backendServiceArm: 'tamopstf'
+          backendAzureRmResourceGroupName: 'tamopstfstates'
+          backendAzureRmStorageAccountName: 'tfstatedevops'
+          backendAzureRmContainerName: 'azurefestivecalendar'
+          backendAzureRmKey: 'terraformdr.tfstate'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+      - task: TerraformTaskV1@0
+        displayName: 'validate'
+        inputs:
+          provider: 'azurerm'
+          command: 'validate'
+          
+  - stage: plan
+    dependsOn: [validate]
+    condition: succeeded('validate')
+    jobs:
+      - job: terraform_apply_dr
+        steps:
+              - checkout: self
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: '0.13.4'
+              - task: TerraformTaskV1@0
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  backendServiceArm: 'tamopstf'
+                  backendAzureRmResourceGroupName: 'tamopstfstates'
+                  backendAzureRmStorageAccountName: 'tfstatedevops'
+                  backendAzureRmContainerName: 'azurefestivecalendar'
+                  backendAzureRmKey: 'terraformdr.tfstate'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              - task: TerraformTaskV1@0
+                displayName: 'plan'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'plan'
+                  commandOptions: '-input=false -var-file="../vars/$(Environment)/$(Environment).tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              - task: ArchiveFiles@2
+                inputs:
+                  rootFolderOrFile: '$(Build.SourcesDirectory)'
+                  includeRootFolder: false
+                  archiveType: 'tar'
+                  tarCompression: 'gz'
+                  archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).tgz'
+                  replaceExistingArchive: true
+                  displayName: 'Create Plan Artifact'
+              - task: PublishBuildArtifacts@1
+                inputs:
+                  PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+                  ArtifactName: '$(Build.BuildId)-tfplan'
+                  publishLocation: 'Container'
+                  displayName: 'Publish Plan Artifact'    
+              - task: DeleteFiles@1
+                displayName: 'Remove unneeded files'
+                inputs:
+                  contents: |
+                    .terraform
+                    tfplan
+
+  - stage: apply
+    dependsOn: [plan]
+    condition: succeeded('plan')
+    jobs:
+    - deployment: Terraform_Deploy
+      continueOnError: false
+      environment: 'azurefestive-dr'
+      timeoutInMinutes: 600
+      strategy:
+       runOnce:
+        deploy:
+            steps:
+              - checkout: none
+              - task: DownloadBuildArtifacts@0
+                inputs:
+                  artifactName: '$(Build.BuildId)-tfplan'
+                  displayName: 'Download Plan Artifact'
+              - task: ExtractFiles@1
+                inputs:
+                  archiveFilePatterns: '$(System.ArtifactsDirectory)/$(Build.BuildId)-tfplan/$(Build.BuildId).tgz'
+                  destinationFolder: '$(System.DefaultWorkingDirectory)/'
+                  cleanDestinationFolder: false
+                  displayName: 'Extract Terraform Plan Artifact'
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: '0.13.4'
+              - task: TerraformTaskV1@0
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  backendServiceArm: 'tamopstf'
+                  backendAzureRmResourceGroupName: 'tamopstfstates'
+                  backendAzureRmStorageAccountName: 'tfstatedevops'
+                  backendAzureRmContainerName: 'azurefestivecalendar'
+                  backendAzureRmKey: 'terraformdr.tfstate'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              - task: TerraformTaskV1@0
+                displayName: 'plan'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'plan'
+                  commandOptions: '-input=false -var-file="../vars/$(Environment)/$(Environment).tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              - task: TerraformTaskV1@0
+                displayName: 'apply'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'apply'
+                  commandOptions: '-input=false -auto-approve -var-file="../vars/$(Environment)/$(Environment).tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'

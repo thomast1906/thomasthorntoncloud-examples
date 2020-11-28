@@ -1,0 +1,192 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+variables:
+  - group: azurefestivecalendar-production
+  
+pool: linuxtamops
+
+trigger:
+  batch: true 
+  branches:
+    include:
+      - main
+
+
+# Don't run against PRs
+pr: none
+
+stages :
+  - stage: validate
+    jobs:
+    - job: validate
+      continueOnError: false
+      steps:
+      - task: TerraformInstaller@0
+        displayName: 'install'
+        inputs:
+          terraformVersion: '0.13.4'
+      - task: TerraformTaskV1@0
+        displayName: 'init'
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          backendServiceArm: 'tamopstf'
+          backendAzureRmResourceGroupName: 'tamopstfstates'
+          backendAzureRmStorageAccountName: 'tfstatedevops'
+          backendAzureRmContainerName: 'azurefestivecalendar'
+          backendAzureRmKey: 'terraformprod.tfstate'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+      - task: TerraformTaskV1@0
+        displayName: 'validate'
+        inputs:
+          provider: 'azurerm'
+          command: 'validate'
+          
+  - stage: plan
+    dependsOn: [validate]
+    condition: succeeded('validate')
+    jobs:
+      - job: terraform_apply_production
+        steps:
+              - checkout: self
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: '0.13.4'
+              - task: TerraformTaskV1@0
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  backendServiceArm: 'tamopstf'
+                  backendAzureRmResourceGroupName: 'tamopstfstates'
+                  backendAzureRmStorageAccountName: 'tfstatedevops'
+                  backendAzureRmContainerName: 'azurefestivecalendar'
+                  backendAzureRmKey: 'terraformprod.tfstate'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              - task: TerraformTaskV1@0
+                displayName: 'plan'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'plan'
+                  commandOptions: '-input=false -var-file="../vars/$(Environment)/$(Environment).tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              
+              - task: ArchiveFiles@2
+                inputs:
+                  rootFolderOrFile: '$(Build.SourcesDirectory)'
+                  includeRootFolder: false
+                  archiveType: 'tar'
+                  tarCompression: 'gz'
+                  archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).tgz'
+                  replaceExistingArchive: true
+                  displayName: 'Create Plan Artifact'
+
+              - task: PublishBuildArtifacts@1
+                inputs:
+                  PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+                  ArtifactName: '$(Build.BuildId)-tfplan'
+                  publishLocation: 'Container'
+                  displayName: 'Publish Plan Artifact'    
+
+              - task: DeleteFiles@1
+                displayName: 'Remove unneeded files'
+                inputs:
+                  contents: |
+                    .terraform
+                    tfplan
+
+  - stage: apply
+    dependsOn: [plan]
+    condition: succeeded('plan')
+    jobs:
+    - deployment: Terraform_Deploy
+      continueOnError: false
+      environment: 'azurefestive-production'
+      timeoutInMinutes: 600
+      strategy:
+       runOnce:
+        deploy:
+            steps:
+              - checkout: none
+
+              - task: DownloadBuildArtifacts@0
+                inputs:
+                  artifactName: '$(Build.BuildId)-tfplan'
+                  displayName: 'Download Plan Artifact'
+
+              - task: ExtractFiles@1
+                inputs:
+                  archiveFilePatterns: '$(System.ArtifactsDirectory)/$(Build.BuildId)-tfplan/$(Build.BuildId).tgz'
+                  destinationFolder: '$(System.DefaultWorkingDirectory)/'
+                  cleanDestinationFolder: false
+                  displayName: 'Extract Terraform Plan Artifact'
+
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: '0.13.4'
+
+              - task: TerraformTaskV1@0
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  backendServiceArm: 'tamopstf'
+                  backendAzureRmResourceGroupName: 'tamopstfstates'
+                  backendAzureRmStorageAccountName: 'tfstatedevops'
+                  backendAzureRmContainerName: 'azurefestivecalendar'
+                  backendAzureRmKey: 'terraformprod.tfstate'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+              - task: TerraformTaskV1@0
+                displayName: 'plan'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'plan'
+                  commandOptions: '-input=false -var-file="../vars/$(Environment)/$(Environment).tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+              - task: TerraformTaskV1@0
+                displayName: 'apply'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'apply'
+                  commandOptions: '-input=false -auto-approve -var-file="../vars/$(Environment)/$(Environment).tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+  - stage: test
+    dependsOn: [apply]
+    condition: succeeded('apply')
+    jobs:
+      - job: "Inspec_Testing"
+        steps:
+          # - task: UseRubyVersion@0
+          #   displayName: 'Install Ruby'
+          #   inputs:
+          #     versionSpec: '>= 2.5'
+          #     addToPath: true
+ 
+          # - script: gem install inspec-bin
+          #   displayName: 'Install inspec-bin'
+                       
+          - task: Bash@3
+            displayName: 'Run inspec tests'
+            inputs:
+              targetType: inline
+              script: |
+                export AZURE_SUBSCRIPTION_ID=$(AZURE_SUBSCRIPTION_ID)
+                export AZURE_CLIENT_ID=$(AZURE_CLIENT_ID)
+                export AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET)
+                export AZURE_TENANT_ID=$(AZURE_TENANT_ID)
+                inspec exec ./azure-inspec-tests/ -t azure:// --chef-license=accept --reporter cli junit:inspectestresults.xml
+ 
+          - task: PublishTestResults@2
+            displayName: Publish inspec test results
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFiles: '**/inspectestresults.xml'
+              mergeTestResults: true

@@ -1,0 +1,125 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+
+pr: none
+
+stages :
+  - stage: validate
+    jobs:
+    - job: validate
+      continueOnError: false
+      steps:
+      - task: TerraformInstaller@0
+        displayName: 'install'
+        inputs:
+          terraformVersion: '0.13.4'
+      - task: TerraformTaskV1@0
+        displayName: 'init'
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          backendServiceArm: 'tamopstf2'
+          backendAzureRmResourceGroupName: 'tamopstfstates'
+          backendAzureRmStorageAccountName: 'tfstatedevops'
+          backendAzureRmContainerName: 'azurefestivecalendar'
+          backendAzureRmKey: 'terraformdev.tfstate' 
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+      - task: TerraformTaskV1@0
+        displayName: 'validate'
+        inputs:
+          provider: 'azurerm'
+          command: 'validate'
+
+  - stage: destroy_develop
+    dependsOn: [validate]
+    condition: succeeded('validate')
+    jobs:
+      - job: terraform_destroy_develop
+        steps:
+              - checkout: self
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: '0.13.4'
+              - task: TerraformTaskV1@0
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  backendServiceArm: 'tamopstf2'
+                  backendAzureRmResourceGroupName: 'tamopstfstates'
+                  backendAzureRmStorageAccountName: 'tfstatedevops'
+                  backendAzureRmContainerName: 'azurefestivecalendar'
+                  backendAzureRmKey: 'terraformdev.tfstate' 
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              - task: TerraformTaskV1@0
+                displayName: 'destroy'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'destroy'
+                  commandOptions: '-input=false -var-file="../vars/develop/develop.tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf2'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+  - stage: destroy_production
+    dependsOn: [destroy_develop]
+    condition: succeeded('destroy_develop')
+    jobs:
+      - job: terraform_destroy_production
+        steps:
+              - checkout: self
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: '0.13.4'
+              - task: TerraformTaskV1@0
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  backendServiceArm: 'tamopstf2'
+                  backendAzureRmResourceGroupName: 'tamopstfstates'
+                  backendAzureRmStorageAccountName: 'tfstatedevops'
+                  backendAzureRmContainerName: 'azurefestivecalendar'
+                  backendAzureRmKey: 'terraformprod.tfstate' 
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              - task: TerraformTaskV1@0
+                displayName: 'destroy'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'destroy'
+                  commandOptions: '-input=false -var-file="../vars/production/production.tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf2'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+  - stage: destroy_dr
+    dependsOn: [destroy_production]
+    condition: succeeded('destroy_production')
+    jobs:
+      - job: terraform_destroy_dr
+        steps:
+              - checkout: self
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: '0.13.4'
+              - task: TerraformTaskV1@0
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  backendServiceArm: 'tamopstf2'
+                  backendAzureRmResourceGroupName: 'tamopstfstates'
+                  backendAzureRmStorageAccountName: 'tfstatedevops'
+                  backendAzureRmContainerName: 'azurefestivecalendar'
+                  backendAzureRmKey: 'terraformdr.tfstate' 
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              - task: TerraformTaskV1@0
+                displayName: 'destroy'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'destroy'
+                  commandOptions: '-input=false -var-file="../vars/dr/dr.tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf2'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
