@@ -1,0 +1,26 @@
+  jobs:
+    - job: terraform_plan
+      steps:
+            - task: TerraformInstaller@0
+              displayName: 'install'
+              inputs:
+                terraformVersion: '0.13.4'
+            - task: TerraformTaskV1@0
+              displayName: 'init'
+              inputs:
+                provider: 'azurerm'
+                command: 'init'
+                backendServiceArm: '${{ parameters.backendServiceArm }}'
+                backendAzureRmResourceGroupName: '${{ parameters.backendAzureRmResourceGroupName }}'
+                backendAzureRmStorageAccountName: '${{ parameters.backendAzureRmStorageAccountName }}'
+                backendAzureRmContainerName: '${{ parameters.backendAzureRmContainerName }}'
+                backendAzureRmKey: '${{ parameters.backendAzureRmKey }}' 
+                workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+            - task: TerraformTaskV1@0
+              displayName: 'plan'
+              inputs:
+                provider: 'azurerm'
+                command: 'plan'
+                commandOptions: '-input=false -var-file="../vars/${{ parameters.environment }}/${{ parameters.environment }}.tfvars"'
+                environmentServiceNameAzureRM: '${{ parameters.backendServiceArm }}'
+                workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
