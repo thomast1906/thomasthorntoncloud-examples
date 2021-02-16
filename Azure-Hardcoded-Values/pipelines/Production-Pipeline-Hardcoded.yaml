@@ -1,0 +1,117 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+
+pr: none
+
+stages :        
+  - stage: terraform_plan
+    jobs:
+      - job: terraform_plan
+        steps:
+              - checkout: self
+
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: '0.13.4'
+
+              - task: TerraformTaskV1@0
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  backendServiceArm: 'tamopstf'
+                  backendAzureRmResourceGroupName: 'tamopstfstates'
+                  backendAzureRmStorageAccountName: 'tfstatedevops'
+                  backendAzureRmContainerName: 'azureterraformbuildartifacts'
+                  backendAzureRmKey: 'terraform.tfstate'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+              - task: TerraformTaskV1@0
+                displayName: 'plan'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'plan'
+                  commandOptions: '-input=false -var-file="../vars/production/production.tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              
+              - task: ArchiveFiles@2
+                inputs:
+                  rootFolderOrFile: '$(Build.SourcesDirectory)'
+                  includeRootFolder: false
+                  archiveType: 'tar'
+                  tarCompression: 'gz'
+                  archiveFile: '$(Build.ArtifactStagingDirectory)/tfbuild.tgz'
+                  replaceExistingArchive: true
+                  displayName: 'Create Plan Artifact'
+
+              - task: PublishBuildArtifacts@1
+                inputs:
+                  PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+                  ArtifactName: 'tfbuild-tfplan'
+                  publishLocation: 'Container'
+                  displayName: 'Publish Plan Artifact'    
+
+              - task: DeleteFiles@1
+                displayName: 'Remove unneeded files'
+                inputs:
+                  contents: |
+                    .terraform
+                    tfplan
+
+  - stage: terraform_apply
+    dependsOn: [terraform_plan]
+    condition: succeeded('terraform_plan')
+    jobs:
+      - job: terraform_apply
+        steps:
+              - checkout: none
+
+              - task: DownloadBuildArtifacts@0
+                inputs:
+                  artifactName: 'tfbuild-tfplan'
+                  displayName: 'Download Plan Artifact'
+
+              - task: ExtractFiles@1
+                inputs:
+                  archiveFilePatterns: '$(System.ArtifactsDirectory)/tfbuild-tfplan/tfbuild.tgz'
+                  destinationFolder: '$(System.DefaultWorkingDirectory)/'
+                  cleanDestinationFolder: false
+                  displayName: 'Extract Terraform Plan Artifact'
+
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: '0.13.4'
+
+              - task: TerraformTaskV1@0
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  backendServiceArm: 'tamopstf'
+                  backendAzureRmResourceGroupName: 'tamopstfstates'
+                  backendAzureRmStorageAccountName: 'tfstatedevops'
+                  backendAzureRmContainerName: 'azureterraformbuildartifacts'
+                  backendAzureRmKey: 'terraform.tfstate'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+              - task: TerraformTaskV1@0
+                displayName: 'plan'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'plan'
+                  commandOptions: '-input=false -var-file="../vars/production/production.tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+              - task: TerraformTaskV1@0
+                displayName: 'apply'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'apply'
+                  commandOptions: '-input=false -auto-approve -var-file="../vars/production/production.tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
