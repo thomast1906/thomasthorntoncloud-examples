@@ -1,0 +1,39 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+trigger:
+  batch: true 
+  branches:
+    include:
+      - master
+
+# Don't run against PRs
+pr: none
+
+stages :
+
+  - stage: deployBicep
+    jobs:
+      - job: "BicepConfigure"
+        steps:
+ 
+          - task: Bash@3
+            displayName: 'Install Bicep'
+            inputs:
+              targetType: inline
+              script: |
+                curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+                chmod +x ./bicep
+                ./bicep build $(System.DefaultWorkingDirectory)/BicepFiles/main.bicep
+
+          - task: AzureCLI@2
+            displayName: 'Deploy Bicep Configuration'
+            inputs:
+              azureSubscription: 'tamopstf'
+              scriptType: bash
+              scriptLocation: inlineScript
+              addSpnToEnvironment: true
+              inlineScript: |
+                #!/bin/bash
+                az group create -l uksouth -n bicep-rg 
+                az deployment group create -f $(System.DefaultWorkingDirectory)/BicepFiles/main.json -g bicep-rg
+
