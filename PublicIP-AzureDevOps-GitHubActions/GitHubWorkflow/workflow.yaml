@@ -1,0 +1,20 @@
+name: 'AzurePublicIP'
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+
+jobs:
+
+  AzureBicepDeploy:
+    name: 'AzurePublicIP'
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Azure Public IP
+      run: |
+        IP=($(curl -s http://ipinfo.io/json | jq '.ip' | sed -e 's/^"//' -e 's/"$//'))
+        echo "This GitHub Workflow agent public IP is: $IP"

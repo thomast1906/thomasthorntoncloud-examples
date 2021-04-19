@@ -1,0 +1,16 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+ 
+trigger: none
+ 
+pr: none
+ 
+stages :       
+  - stage: check_public_ip
+    jobs:
+      - job: check_public_ip
+        steps:
+              - task: Bash@3
+                inputs:
+                  script: |
+                    IP=($(curl -s http://ipinfo.io/json | jq '.ip' | sed -e 's/^"//' -e 's/"$//'))
+                    echo "This Microsoft hosted agent public IP is: $IP"
