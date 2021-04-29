@@ -1,0 +1,72 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+trigger:
+  batch: true 
+  branches:
+    include:
+      - main
+
+variables: 
+  DATE: '05042021'
+
+pr: none
+
+stages :
+  - stage: scoutsuite
+    jobs:
+    - job: scoutsuite
+      continueOnError: false
+      steps:
+
+      - task: AzureKeyVault@1
+        displayName: "Retrieve Key Vault Secrets"
+        inputs:
+          azureSubscription: 'tamopstf2'
+          keyVaultName: 'tamopsscoutkv'
+          secretsFilter: '*'
+          runAsPreJob: false
+
+      - task: AzureCLI@2
+        displayName: "Add Azure DevOps IP to Storage Account"
+        inputs:
+          azureSubscription: 'tamopstf2'
+          scriptType: 'bash'
+          scriptLocation: inlineScript
+          inlineScript: |
+            IP=($(curl -s http://ipinfo.io/json | jq '.ip' | sed -e 's/^"//' -e 's/"$//'))
+            az storage account network-rule add -g tamops-scoutsuite --account-name tamopsscoutsuite --ip-address $IP
+
+      - task: Bash@3
+        displayName: "Run Scout Suite"
+        inputs:
+          targetType: 'inline'
+          script: |
+            mkdir $(DATE)
+            cd $(DATE)
+            docker run --rm -v $(pwd):/share rossja/ncc-scoutsuite:0.6.0 /root/scoutsuite/bin/scout azure --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --tenant $TENANT_ID --service-principal --all-subscriptions --no-browser --report-dir /share --report-name index
+            echo "test"
+        env:
+          CLIENT_ID: $(CLIENT-ID)
+          CLIENT_SECRET: $(CLIENT-SECRET)
+          TENANT_ID: $(TENANT-ID)
+
+      - task: AzureCLI@2
+        displayName: "Copy Scout Suite Report"
+        inputs:
+          azureSubscription: 'tamopstf2'
+          scriptType: 'bash'
+          scriptLocation: inlineScript
+          inlineScript: |
+            az storage copy -s $(DATE) --destination-account-name tamopsscoutsuite --destination-container '$web' --recursive
+
+      - task: AzureCLI@2
+        displayName: "Remove Azure DevOps IP from Storage Account"
+        inputs:
+          azureSubscription: 'tamopstf2'
+          scriptType: 'bash'
+          scriptLocation: inlineScript
+          inlineScript: |
+            # az --version
+            # az account list
+            IP=($(curl -s http://ipinfo.io/json | jq '.ip' | sed -e 's/^"//' -e 's/"$//'))
+            az storage account network-rule remove -g tamops-scoutsuite --account-name tamopsscoutsuite --ip-address $IP
