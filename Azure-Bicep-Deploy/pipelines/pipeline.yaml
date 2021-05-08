@@ -17,13 +17,11 @@ stages :
         steps:
  
           - task: Bash@3
-            displayName: 'Install Bicep'
+            displayName: 'Bicep Build'
             inputs:
               targetType: inline
               script: |
-                curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
-                chmod +x ./bicep
-                ./bicep build $(System.DefaultWorkingDirectory)/BicepFiles/main.bicep
+                az bicep build --file $(System.DefaultWorkingDirectory)/BicepFiles/main.bicep
 
           - task: AzureCLI@2
             displayName: 'Deploy Bicep Configuration'
