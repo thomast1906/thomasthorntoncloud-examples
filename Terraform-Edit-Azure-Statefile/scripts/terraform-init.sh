@@ -1,0 +1,1 @@
+terraform init -backend-config storage_account_name=tfstatedevops -backend-config container_name=editterraformstate -backend-config resource_group_name=tamopstfstates -backend-config key=editstate.tfstate
