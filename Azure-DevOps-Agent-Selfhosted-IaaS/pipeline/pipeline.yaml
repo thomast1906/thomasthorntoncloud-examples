@@ -1,0 +1,19 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+pool: thomasthorntoncloud
+
+# Don't run against PRs
+pr: none
+
+stages :
+  - stage: Test
+    jobs:
+    - job: testexample
+      continueOnError: false
+      steps:
+        - task: Bash@3
+          displayName: 'Test Echo'
+          inputs:
+            targetType: inline
+            script: |
+              echo "Testing thomasthornton.cloud ADO Agent"
