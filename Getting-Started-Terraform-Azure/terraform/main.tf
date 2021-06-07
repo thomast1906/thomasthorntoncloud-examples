@@ -1,11 +1,7 @@
 data "azurerm_client_config" "current" {}
 
 terraform {
-  backend "azurerm" {
-    resource_group_name  = "thomasthornton-tfstate"
-    storage_account_name = "thomasthorntontfstate"
-    container_name       = "tfstate"
-    key                  = "develop.tfstate"
+  backend "local" {
   }
 }
 
