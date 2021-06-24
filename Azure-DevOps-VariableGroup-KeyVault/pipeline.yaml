@@ -1,0 +1,21 @@
+name: "Azure DevOps Pipeline Variable Group KeyVault example"
+
+variables:
+  - group: variable-group-keyvault
+  
+# Don't run against PRs
+pr: none
+
+stages :
+  - stage: az_group_list
+    jobs:
+    - job: az_group_list
+      continueOnError: false
+      steps:
+      - task: Bash@3
+        displayName: 'az login and group list'
+        inputs:
+          targetType: inline
+          script: |
+            az login --service-principal --username  $(username) --password $(password) --tenant $(tenantId)
+            az group list
