@@ -1,0 +1,30 @@
+parameters:
+  - name: environment
+    displayName: Which Team to deploy?
+    type: string
+    default: 'developer'
+    values:
+    - developer
+    - preproduction
+    - production
+
+variables:
+  - name: teamName
+    ${{ if eq( parameters['environment'], 'developer') }}: 
+      value: "alpha"
+    ${{ if eq( parameters['environment'], 'preproduction' ) }}: 
+      value: "beta"
+    ${{ if notIn( parameters['environment'], 'developer', 'preproduction') }}: 
+      value: "charlie"
+
+stages:
+- stage: TeamToDeploy
+  jobs:
+  - job: Example
+    steps:
+      - task: Bash@3
+        displayName: TeamDeployed
+        inputs:
+          targetType: inline
+          script: |
+            echo ${{variables.teamName}}
