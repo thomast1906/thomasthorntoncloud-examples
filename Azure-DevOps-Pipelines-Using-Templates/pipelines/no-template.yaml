@@ -1,0 +1,180 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+
+pr: none
+
+variables:
+  - group: azurefestivecalendar-production
+  - name: backendServiceArm
+    value: 'tamopstf2'
+  - name: backendAzureRmResourceGroupName
+    value: 'tamopstfstates'
+  - name: backendAzureRmStorageAccountName
+    value: 'tfstatedevops'
+  - name: backendAzureRmContainerName
+    value: 'azuredevopstemplates'
+  - name: backendAzureRmKey
+    value: 'terraform.tfstate'
+  - name: environment
+    value: 'production'
+
+stages :
+  - stage: validate
+    jobs:
+    - job: validate
+      continueOnError: false
+      steps:
+      - task: TerraformInstaller@0
+        displayName: 'install'
+        inputs:
+          terraformVersion: '0.13.3'
+      - task: TerraformTaskV1@0
+        displayName: 'init'
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          backendServiceArm: 'tamopstf'
+          backendAzureRmResourceGroupName: '${{ variables.backendAzureRmResourceGroupName}}'
+          backendAzureRmStorageAccountName: '${{ variables.backendAzureRmStorageAccountName}}'
+          backendAzureRmContainerName: '${{ variables.backendAzureRmContainerName }}'
+          backendAzureRmKey: 'terraform.tfstate'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+      - task: TerraformTaskV1@0
+        displayName: 'validate'
+        inputs:
+          provider: 'azurerm'
+          command: 'validate'
+          
+  - stage: plan
+    dependsOn: [validate]
+    condition: succeeded('validate')
+    jobs:
+      - job: terraform_plan_develop
+        steps:
+              - checkout: self
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: '0.13.3'
+              - task: TerraformTaskV1@0
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  backendServiceArm: 'tamopstf'
+                  backendAzureRmResourceGroupName: '${{ variables.backendAzureRmResourceGroupName}}'
+                  backendAzureRmStorageAccountName: '${{ variables.backendAzureRmStorageAccountName}}'
+                  backendAzureRmContainerName: '${{ variables.backendAzureRmContainerName }}'
+                  backendAzureRmKey: 'terraform.tfstate'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              - task: TerraformTaskV1@0
+                displayName: 'plan'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'plan'
+                  commandOptions: '-input=false -var-file="../$(Environment)/$(Environment).tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+  - stage: apply
+    dependsOn: [plan]
+    condition: succeeded('plan')
+    jobs:
+      - job: terraform_apply_production
+        steps:
+              - checkout: self
+              - task: TerraformInstaller@0
+                displayName: 'install'
+                inputs:
+                  terraformVersion: '0.13.3'
+              - task: TerraformTaskV1@0
+                displayName: 'init'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'init'
+                  backendServiceArm: 'tamopstf'
+                  backendAzureRmResourceGroupName: '${{ variables.backendAzureRmResourceGroupName}}'
+                  backendAzureRmStorageAccountName: '${{ variables.backendAzureRmStorageAccountName}}'
+                  backendAzureRmContainerName: '${{ variables.backendAzureRmContainerName }}'
+                  backendAzureRmKey: 'terraform.tfstate'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              - task: TerraformTaskV1@0
+                displayName: 'plan'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'plan'
+                  commandOptions: '-input=false -var-file="../$(Environment)/$(Environment).tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+              - task: TerraformTaskV1@0
+                displayName: 'apply'
+                inputs:
+                  provider: 'azurerm'
+                  command: 'apply'
+                  commandOptions: '-input=false -auto-approve -var-file="../$(Environment)/$(Environment).tfvars"'
+                  environmentServiceNameAzureRM: 'tamopstf'
+                  workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+  - stage: test
+    dependsOn: [apply]
+    condition: succeeded('apply')
+    jobs:
+      - job: Inspec_Testing
+        steps:
+          - task: UseRubyVersion@0
+            displayName: 'Install Ruby'
+            inputs:
+              versionSpec: '>= 2.5'
+              addToPath: true
+ 
+          - script: gem install inspec-bin
+            displayName: 'Install inspec-bin'
+                       
+          - task: Bash@3
+            displayName: 'Run inspec tests'
+            inputs:
+              targetType: inline
+              script: |
+                export AZURE_SUBSCRIPTION_ID=$(AZURE_SUBSCRIPTION_ID)
+                export AZURE_CLIENT_ID=$(AZURE_CLIENT_ID)
+                export AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET)
+                export AZURE_TENANT_ID=$(AZURE_TENANT_ID)
+                inspec exec ./azure-inspec-tests/ -t azure:// --chef-license=accept --reporter cli junit:inspectestresults.xml
+ 
+          - task: PublishTestResults@2
+            displayName: Publish inspec test results
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFiles: '**/inspectestresults.xml'
+              mergeTestResults: true
+
+  - stage: bash
+    dependsOn: [apply]
+    condition: succeeded('apply')
+    jobs:
+      - job: bash_echo
+        steps:
+          - task: Bash@3
+            displayName: 'Echo Test'
+            inputs:
+              targetType: inline
+              script: |
+                Echo "Test Script!"
+
+  - stage: cli
+    dependsOn: [apply]
+    condition: succeeded('apply')
+    jobs:
+      - job: azcli_resourcegroup_create
+        steps:
+              - task: AzureCLI@2
+                displayName: 'Deploy Resource Group'
+                inputs:
+                  azureSubscription: 'tamopstf'
+                  scriptType: bash
+                  scriptLocation: inlineScript
+                  addSpnToEnvironment: true
+                  inlineScript: |
+                    #!/bin/bash
+                    az group create -l uksouth -n bicep-rg 

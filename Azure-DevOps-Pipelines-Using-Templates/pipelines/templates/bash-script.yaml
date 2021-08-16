@@ -1,0 +1,9 @@
+  jobs:
+    - job: bash_echo
+      steps:
+        - task: Bash@3
+          displayName: 'Echo Test'
+          inputs:
+            targetType: inline
+            script: |
+              Echo "${{ parameters.bash_input }}"

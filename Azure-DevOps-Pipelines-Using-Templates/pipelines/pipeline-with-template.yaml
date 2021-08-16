@@ -1,0 +1,93 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+
+pr: none
+
+variables:
+  - group: azurefestivecalendar-production
+  - name: backendServiceArm
+    value: 'tamopstf2'
+  - name: backendAzureRmResourceGroupName
+    value: 'tamopstfstates'
+  - name: backendAzureRmStorageAccountName
+    value: 'tfstatedevops'
+  - name: backendAzureRmContainerName
+    value: 'azuredevopstemplates'
+  - name: backendAzureRmKey
+    value: 'terraform.tfstate'
+  - name: environment
+    value: 'production'
+  - name: terraform_version
+    value: '0.13.3'
+  - name: ruby_versionspec
+    value: '>= 2.5'
+
+stages :   
+  - stage: terraform_validate
+    jobs:
+      - template: templates/terraform-validate.yaml
+        parameters:
+          backendServiceArm: ${{ variables.backendServiceArm }}
+          backendAzureRmResourceGroupName: ${{ variables.backendAzureRmResourceGroupName }}
+          backendAzureRmStorageAccountName: ${{ variables.backendAzureRmStorageAccountName }}
+          backendAzureRmContainerName: ${{ variables.backendAzureRmContainerName }}
+          backendAzureRmKey: ${{ variables.backendAzureRmKey }}
+          environment: ${{ variables.environment }}
+          terraform_version: ${{ variables.terraform_version }}
+
+  - stage: terraform_plan
+    dependsOn: [terraform_validate]
+    condition: succeeded('terraform_validate')
+    jobs:
+      - template: templates/terraform-plan.yaml
+        parameters:
+          backendServiceArm: ${{ variables.backendServiceArm }}
+          backendAzureRmResourceGroupName: ${{ variables.backendAzureRmResourceGroupName }}
+          backendAzureRmStorageAccountName: ${{ variables.backendAzureRmStorageAccountName }}
+          backendAzureRmContainerName: ${{ variables.backendAzureRmContainerName }}
+          backendAzureRmKey: ${{ variables.backendAzureRmKey }}
+          environment: ${{ variables.environment }}
+          terraform_version: ${{ variables.terraform_version }}
+
+  - stage: terraform_apply
+    dependsOn: [terraform_plan]
+    condition: succeeded('terraform_plan')
+    jobs:
+      - template: templates/terraform-apply.yaml
+        parameters:
+          backendServiceArm: ${{ variables.backendServiceArm }}
+          backendAzureRmResourceGroupName: ${{ variables.backendAzureRmResourceGroupName }}
+          backendAzureRmStorageAccountName: ${{ variables.backendAzureRmStorageAccountName }}
+          backendAzureRmContainerName: ${{ variables.backendAzureRmContainerName }}
+          backendAzureRmKey: ${{ variables.backendAzureRmKey }}
+          environment: ${{ variables.environment }}
+          terraform_version: ${{ variables.terraform_version }}
+
+  - stage: inspec_testing
+    dependsOn: [terraform_apply]
+    condition: succeeded('terraform_apply')
+    jobs:
+      - template: templates/inspec-testing.yaml
+        parameters:
+          ruby_versionspec: ${{ variables.backendServiceArm }}
+          AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+          AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+          AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+          AZURE_TENANT_ID: $(AZURE_TENANT_ID)
+
+  - stage: bash
+    dependsOn: [terraform_apply]
+    condition: succeeded('terraform_apply')
+    jobs:
+      - template: templates/bash-script.yaml
+        parameters:
+          bash_input: "Test Script!"
+
+  - stage: cli
+    dependsOn: [terraform_apply]
+    condition: succeeded('terraform_apply')
+    jobs:
+      - template: templates/az-cli.yaml
+        parameters:
+          resource_group: "bicep-rg"

@@ -1,0 +1,13 @@
+  jobs:
+    - job: azcli_resourcegroup_create
+      steps:
+            - task: AzureCLI@2
+              displayName: 'Deploy Resource Group'
+              inputs:
+                azureSubscription: 'tamopstf'
+                scriptType: bash
+                scriptLocation: inlineScript
+                addSpnToEnvironment: true
+                inlineScript: |
+                  #!/bin/bash
+                  az group create -l uksouth -n ${{ parameters.resource_group }}
