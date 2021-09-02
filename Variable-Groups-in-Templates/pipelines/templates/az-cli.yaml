@@ -1,0 +1,14 @@
+  jobs:
+    - job: create_azure_rg_job
+      steps:
+            - task: AzureCLI@2
+              displayName: 'Create Azure RG'
+              inputs:
+                azureSubscription: 'thomasthorntoncloud'
+                scriptType: bash
+                scriptLocation: inlineScript
+                addSpnToEnvironment: true
+                inlineScript: |
+                  #!/usr/bin/env bash
+
+                  az group create -l uksouth -n $(RGNAME)

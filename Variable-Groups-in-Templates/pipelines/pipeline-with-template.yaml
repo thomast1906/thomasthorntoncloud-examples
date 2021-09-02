@@ -1,0 +1,15 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+
+pr: none
+
+variables:
+  - group: azure-back-to-school-2021
+  - name: backendServiceArm
+    value: 'thomasthorntoncloud'
+ 
+stages :   
+  - stage: az_cli_example
+    jobs:
+      - template: templates/az-cli.yaml
