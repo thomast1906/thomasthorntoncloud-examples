@@ -1,0 +1,27 @@
+  jobs:
+    - job: terraform_apply
+      steps:
+        - task: TerraformInstaller@0
+          displayName: 'install'
+          inputs:
+            terraformVersion: '${{ parameters.terraform_version }}'
+        - task: TerraformTaskV1@0
+          displayName: 'init'
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            backendServiceArm: '${{ parameters.backendServiceArm }}'
+            backendAzureRmResourceGroupName: '${{ parameters.backendAzureRmResourceGroupName }}'
+            backendAzureRmStorageAccountName: '${{ parameters.backendAzureRmStorageAccountName }}'
+            backendAzureRmContainerName: '${{ parameters.backendAzureRmContainerName }}'
+            backendAzureRmKey: '${{ parameters.backendAzureRmKey }}' 
+            workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+        - task: TerraformTaskV1@0
+          displayName: 'apply'
+          condition: and(succeeded(), eq(variables['Action'], 'Apply'))
+          inputs:
+            provider: 'azurerm'
+            command: 'apply'
+            commandOptions: '-input=false -auto-approve -var-file="../${{ parameters.environment }}/${{ parameters.environment }}.tfvars"'
+            environmentServiceNameAzureRM: '${{ parameters.backendServiceArm }}'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
