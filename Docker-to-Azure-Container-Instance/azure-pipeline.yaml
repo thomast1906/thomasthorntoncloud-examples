@@ -1,0 +1,114 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+
+pr: none
+
+parameters:
+
+  - name: Action
+    displayName: Action
+    type: string
+    default: 'Apply'
+    values:
+    - Plan
+    - Apply
+    - Destroy
+
+variables:
+  - name: backendServiceArm
+    value: 'thomasthorntoncloud'
+  - name: backendAzureRmResourceGroupName
+    value: 'thomasthorntoncloud'
+  - name: backendAzureRmStorageAccountName
+    value: 'thomasthorntontfstate'
+  - name: backendAzureRmContainerName
+    value: 'dockertoaci'
+  - name: backendAzureRmKey
+    value: 'terraform.tfstate'
+  - name: backendAzureRmKeyAci
+    value: 'terraform-aci.tfstate'
+  - name: environment
+    value: 'production'
+  - name: terraform_version
+    value: '1.0.10'
+  - name: action
+    value: ${{ parameters.Action }}
+  - name: repository
+    value: 'aci'
+  - name: dockerfile
+    value: '$(Build.SourcesDirectory)/aspnet-core-dotnet-core/Dockerfile'
+  - name: containerRegistry
+    value: 'tamopsciacr'
+
+stages :   
+  - stage: terraform_base
+    condition: ne('${{ parameters.Action }}', 'Destroy')
+    jobs:
+      - template: templates/terraform-apply.yaml
+        parameters:
+          backendServiceArm: '${{ variables.backendServiceArm }}'
+          backendAzureRmResourceGroupName: '${{ variables.backendAzureRmResourceGroupName }}'
+          backendAzureRmStorageAccountName: '${{ variables.backendAzureRmStorageAccountName }}'
+          backendAzureRmContainerName: '${{ variables.backendAzureRmContainerName }}'
+          backendAzureRmKey: '${{ variables.backendAzureRmKey }}' 
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+          environment: ${{ variables.environment }}
+          terraform_version: ${{ variables.terraform_version }}
+
+  - stage: Build
+    dependsOn: [terraform_base]
+    displayName: Build and push stage
+    jobs:
+    - template: templates/docker.yaml
+      parameters:
+        repository: ${{ variables.repository }}
+        dockerfile: ${{ variables.dockerfile }}
+        containerRegistry: ${{ variables.containerRegistry }}
+
+  - stage: terraform__aci
+    dependsOn: [Build]
+    condition: ne('${{ parameters.Action }}', 'Destroy')
+    jobs:
+      - template: templates/terraform-apply.yaml
+        parameters:
+          backendServiceArm: '${{ variables.backendServiceArm }}'
+          backendAzureRmResourceGroupName: '${{ variables.backendAzureRmResourceGroupName }}'
+          backendAzureRmStorageAccountName: '${{ variables.backendAzureRmStorageAccountName }}'
+          backendAzureRmContainerName: '${{ variables.backendAzureRmContainerName }}'
+          backendAzureRmKey: '${{ variables.backendAzureRmKeyAci }}' 
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-aci/'
+          environment: ${{ variables.environment }}
+          terraform_version: ${{ variables.terraform_version }}
+
+  - stage: terraform_destroy
+    condition: contains('${{ parameters.Action }}', 'Destroy')
+    jobs:
+      - template: templates/terraform-destroy.yaml
+        parameters:
+          backendServiceArm: '${{ variables.backendServiceArm }}'
+          backendAzureRmResourceGroupName: '${{ variables.backendAzureRmResourceGroupName }}'
+          backendAzureRmStorageAccountName: '${{ variables.backendAzureRmStorageAccountName }}'
+          backendAzureRmContainerName: '${{ variables.backendAzureRmContainerName }}'
+          backendAzureRmKey: '${{ variables.backendAzureRmKeyAci }}' 
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-aci/'
+          environment: ${{ variables.environment }}
+          terraform_version: ${{ variables.terraform_version }}
+          job_name: 'terraform_destroy_aci'
+
+      - template: templates/terraform-destroy.yaml
+        parameters:
+          backendServiceArm: '${{ variables.backendServiceArm }}'
+          backendAzureRmResourceGroupName: '${{ variables.backendAzureRmResourceGroupName }}'
+          backendAzureRmStorageAccountName: '${{ variables.backendAzureRmStorageAccountName }}'
+          backendAzureRmContainerName: '${{ variables.backendAzureRmContainerName }}'
+          backendAzureRmKey: '${{ variables.backendAzureRmKey }}' 
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+          environment: ${{ variables.environment }}
+          terraform_version: ${{ variables.terraform_version }}
+          job_name: 'terraform_destroy_base'
+        

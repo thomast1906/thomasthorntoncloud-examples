@@ -1,0 +1,13 @@
+  jobs: 
+    - job: Build
+      displayName: Build job
+      steps:
+      - task: Docker@2
+        displayName: Build and push an image to container registry
+        condition: and(succeeded(), eq(variables['Action'], 'Apply'))
+        inputs:
+          command: buildAndPush
+          repository: ${{ parameters.repository }}
+          dockerfile: ${{ parameters.dockerfile }}
+          containerRegistry: ${{ parameters.containerRegistry }}
+          tags: '$(Build.BuildId)'
