@@ -1,0 +1,119 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+
+variables:
+  - group: azure-container-app
+
+stages :
+  - stage: create_acr
+    jobs:
+      - job: "create_acr"
+        steps:
+          - task: AzureCLI@2
+            displayName: 'Deploy RG and ACR'
+            inputs:
+              azureSubscription: 'thomasthorntoncloud'
+              scriptType: bash
+              scriptLocation: inlineScript
+              addSpnToEnvironment: true
+              inlineScript: |
+                #!/bin/bash
+
+                RESOURCE_GROUP="azure-container-rg"
+                LOCATION="westeurope"
+                LOG_ANALYTICS_WORKSPACE="tamopsacrcontainersla"
+                ACR="tamopsacrcontainers"
+
+                az group create -l $LOCATION -n $RESOURCE_GROUP
+                az acr create -g $RESOURCE_GROUP -n $ACR --sku basic --admin-enabled true
+                az monitor log-analytics workspace create -g $RESOURCE_GROUP --workspace-name $LOG_ANALYTICS_WORKSPACE
+
+  - stage: Build
+    dependsOn: [create_acr]
+    displayName: Build sample app
+    jobs:  
+    - job: Build
+      displayName: Build job
+      steps:
+      - task: Docker@2
+        displayName: Build and push sample app to container registry
+        inputs:
+          command: buildAndPush
+          repository: 'sampleapp'
+          dockerfile: '$(Build.SourcesDirectory)/aspnet-core-dotnet-core/Dockerfile'
+          containerRegistry: 'tamopsacrcontainers'
+          tags: '$(Build.BuildId)'
+
+  - stage: create_container_environment
+    dependsOn: [Build]
+    jobs:
+      - job: "deploy_app"
+        steps:
+          - task: AzureCLI@2
+            displayName: 'Create container app environment'
+            inputs:
+              azureSubscription: 'thomasthorntoncloud'
+              scriptType: bash
+              scriptLocation: inlineScript
+              addSpnToEnvironment: true
+              inlineScript: |
+                #!/bin/bash
+                az extension add \
+                --source https://workerappscliextension.blob.core.windows.net/azure-cli-extension/containerapp-0.2.2-py2.py3-none-any.whl --yes
+
+                az provider register --namespace Microsoft.Web
+
+                RESOURCE_GROUP="azure-container-rg"
+                LOCATION="westeurope"
+                LOG_ANALYTICS_WORKSPACE="tamopsacrcontainersla"
+                CONTAINERAPPS_ENVIRONMENT="tamops-environment"
+
+                LOG_ANALYTICS_WORKSPACE_CLIENT_ID=`az monitor log-analytics workspace show --query customerId -g $RESOURCE_GROUP -n $LOG_ANALYTICS_WORKSPACE -o tsv | tr -d '[:space:]'`
+                LOG_ANALYTICS_WORKSPACE_CLIENT_SECRET=`az monitor log-analytics workspace get-shared-keys --query primarySharedKey -g $RESOURCE_GROUP -n $LOG_ANALYTICS_WORKSPACE -o tsv | tr -d '[:space:]'`
+
+                az containerapp env create \
+                -n $CONTAINERAPPS_ENVIRONMENT \
+                -g $RESOURCE_GROUP \
+                --logs-workspace-id $LOG_ANALYTICS_WORKSPACE_CLIENT_ID \
+                --logs-workspace-key $LOG_ANALYTICS_WORKSPACE_CLIENT_SECRET \
+                -l $LOCATION
+
+  - stage: deploy_container_app
+    dependsOn: [create_container_environment]
+    jobs:
+      - job: "deploy_app"
+        steps:
+          - task: AzureCLI@2
+            displayName: 'Deploy app to Container App'
+            inputs:
+              azureSubscription: 'thomasthorntoncloud'
+              scriptType: bash
+              scriptLocation: inlineScript
+              addSpnToEnvironment: true
+              inlineScript: |
+                #!/bin/bash
+                az extension add \
+                --source https://workerappscliextension.blob.core.windows.net/azure-cli-extension/containerapp-0.2.2-py2.py3-none-any.whl --yes
+
+                az provider register --namespace Microsoft.Web
+
+                RESOURCE_GROUP="azure-container-rg"
+                LOG_ANALYTICS_WORKSPACE="tamopsacrcontainersla"
+                CONTAINERAPPS_ENVIRONMENT="tamops-environment"
+
+                az containerapp update \
+                  --name tamopsapp \
+                  --resource-group $RESOURCE_GROUP \
+                  --image tamopsacrcontainers.azurecr.io/sampleapp:'$(Build.BuildId)' \
+                  --min-replicas 2 \
+                  --max-replicas 2 \
+                  --registry-login-server tamopsacrcontainers.azurecr.io \
+                  --registry-username tamopsacrcontainers \
+                  --registry-password $(acrpassword) \
+                  --target-port 80 \
+                  --ingress 'external'
