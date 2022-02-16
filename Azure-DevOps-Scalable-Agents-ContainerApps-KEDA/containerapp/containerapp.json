@@ -1,0 +1,152 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-08-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "defaultValue": "northeurope",
+            "type": "String"
+        },
+        "environment_name": {
+            "type": "String"
+        },
+        "azp_url": {
+            "type": "securestring"
+        },
+        "azp_token": {
+            "type": "securestring"
+        },
+        "azp_pool": {
+            "type": "String"
+        },
+        "azp_poolId": {
+            "type": "String"
+        },
+        "REGISTRY_LOGIN_SERVER": {
+            "type": "String"
+        },
+        "REGISTRY_USERNAME": {
+            "type": "String"
+        },
+        "REGISTRY_PASSWORD": {
+            "type": "securestring"
+        },
+        "IMAGE": {
+            "type": "String"
+        },
+        "MIN_REPLICAS": {
+            "type": "String"
+        },
+        "MAX_REPLICAS": {
+            "type": "String"
+        },
+        "CPU": {
+            "type": "String"
+        },
+        "MEMORY": {
+            "type": "String"
+        },
+        "CONTAINER_APP_NAME": {
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "azuredevops-agent",
+            "type": "Microsoft.Web/containerApps",
+            "apiVersion": "2021-03-01",
+            "kind": "containerapp",
+            "location": "[parameters('location')]",
+            "properties": {
+                "kubeEnvironmentId": "[resourceId('Microsoft.Web/kubeEnvironments', parameters('environment_name'))]",
+                "configuration": {
+                    "secrets": [
+                        {
+                            "name": "azp-url",
+                            "value": "[parameters('azp_url')]"
+                        },
+                        {
+                            "name": "azp-token",
+                            "value": "[parameters('azp_token')]"
+                        },
+                        {
+                            "name": "azp-pool",
+                            "value": "[parameters('azp_pool')]"
+                        },
+                        {
+                            "name": "azp-poolid",
+                            "value": "[parameters('azp_poolId')]"
+                        },
+                        {
+                            "name": "registry-secret",
+                            "value": "[parameters('REGISTRY_PASSWORD')]"
+                        }
+                    ],
+                    "registries": [
+                        {
+                            "server": "[parameters('REGISTRY_LOGIN_SERVER')]",
+                            "username": "[parameters('REGISTRY_USERNAME')]",
+                            "passwordSecretRef": "registry-secret"
+                        }
+                    ]
+                },
+                "template": {
+                    "containers": [
+                        {
+                            "image": "[parameters('IMAGE')]",
+                            "name": "basedockeragent",
+                            "resources": {
+                                "cpu": 1.75,
+                                "memory": "3.5Gi"
+                            },
+                            "env": [
+                                {
+                                    "name": "AZP_URL",
+                                    "secretRef": "azp-url"
+                                },
+                                {
+                                    "name": "AZP_TOKEN",
+                                    "secretRef": "azp-token"
+                                },
+                                {
+                                    "name": "AZP_POOL",
+                                    "secretRef": "azp-pool"
+                                },
+                                {
+                                    "name": "AZP_POOLID",
+                                    "secretRef": "azp-poolid"
+                                }
+                            ]
+                        }
+                    ],
+                    "scale": {
+                        "minReplicas": "[parameters('MIN_REPLICAS')]",
+                        "maxReplicas": "[parameters('MAX_REPLICAS')]",
+                        "rules": [
+                            {
+                                "name": "[parameters('CONTAINER_APP_NAME')]",
+                                "custom": {
+                                    "type": "azure-pipelines",
+                                    "metadata": {
+                                        "poolID": "[parameters('azp_poolId')]",
+                                        "targetPipelinesQueueLength": "[parameters('MIN_REPLICAS')]"
+                                    },
+                                    "auth": [
+                                        {
+                                            "secretRef": "azp-token",
+                                            "triggerParameter": "personalAccessToken"
+                                        },
+                                        {
+                                            "secretRef": "azp-url",
+                                            "triggerParameter": "organizationURL"
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    ]
+}
