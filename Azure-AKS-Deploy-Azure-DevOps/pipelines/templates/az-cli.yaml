@@ -1,0 +1,22 @@
+  jobs:
+    - job: azcli_resourcegroup_create
+      steps:
+            - task: AzureCLI@2
+              displayName: 'BootStrap AKS Cluster'
+              inputs:
+                azureSubscription: 'thomasthorntoncloud'
+                scriptType: bash
+                scriptLocation: inlineScript
+                addSpnToEnvironment: true
+                inlineScript: |
+                  #!/usr/bin/env bash
+                  set -x
+
+                  AKS_RG="azuredevopsaksdeployaks-rg"
+                  AKS_NAME="azuredevopsaksdeployaks"
+
+                  # Get AKS Credentials
+                  az aks get-credentials -g $AKS_RG -n $AKS_NAME --admin
+
+                  # For AAD Pod Identity
+                  kubectl create -f https://raw.githubusercontent.com/Azure/aad-pod-identity/master/deploy/infra/deployment-rbac.yaml 
