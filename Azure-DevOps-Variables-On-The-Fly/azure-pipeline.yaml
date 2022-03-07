@@ -1,0 +1,47 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+
+stages:
+- stage: create_variables_stage
+  jobs:
+  - job: create_variables_job
+    steps:
+      - task: AzureCLI@2
+        displayName: 'Create ADO Variables'
+        name: 'ADO_variables'
+        inputs:
+          azureSubscription: 'thomasthorntoncloud'
+          scriptType: bash
+          scriptLocation: inlineScript
+          addSpnToEnvironment: true
+          inlineScript: |
+            #!/bin/bash
+            VNET_RESOURCE_ID=$(az network vnet show --resource-group "thomasthorntoncloud-ado-agent" --name "thomasthorntoncloud-ado-agent-vnet" --query "id" -o tsv)
+            VNET_LOCATION=$(az network vnet show --resource-group "thomasthorntoncloud-ado-agent" --name "thomasthorntoncloud-ado-agent-vnet" --query "location" -o tsv)
+
+            echo "Setting variable VNET_RESOURCE_ID_SET"
+            echo "##vso[task.setvariable variable=VNET_RESOURCE_ID_SET;isOutput=true]$VNET_RESOURCE_ID"
+
+            echo "Setting variable VNET_LOCATION_SET"
+            echo "##vso[task.setvariable variable=VNET_LOCATION_SET;isOutput=true]$VNET_LOCATION"
+
+- stage: variables_stage_output
+  jobs:
+  - job: variables_stage_output_job
+    variables:
+      VNET_RESOURCE_ID_SET: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.VNET_RESOURCE_ID_SET']]
+      VNET_LOCATION_SET: $[stageDependencies.create_variables_stage.create_variables_job.outputs['ADO_variables.VNET_LOCATION_SET']]
+    steps:
+      - task: Bash@3
+        displayName: 'Output new ADO Variables'
+        inputs:
+          targetType: inline
+          script: |
+            echo "VNET Resource ID is: $VNET_RESOURCE_ID_SET"
+
+            echo "VNET Location is: $VNET_LOCATION_SET"
