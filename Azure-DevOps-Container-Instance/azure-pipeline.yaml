@@ -63,10 +63,8 @@ stages :
               addSpnToEnvironment: true
               inlineScript: |
                 #!/bin/bash
-                az extension add \
-                --source https://workerappscliextension.blob.core.windows.net/azure-cli-extension/containerapp-0.2.2-py2.py3-none-any.whl --yes
-
-                az provider register --namespace Microsoft.Web
+                az config set extension.use_dynamic_install=yes_without_prompt
+                az provider register --namespace Microsoft.App
 
                 RESOURCE_GROUP="azure-container-rg"
                 LOCATION="westeurope"
@@ -98,10 +96,9 @@ stages :
               inlineScript: |
                 #!/bin/bash
                 az extension add \
-                --source https://workerappscliextension.blob.core.windows.net/azure-cli-extension/containerapp-0.2.2-py2.py3-none-any.whl --yes
-
-                az provider register --namespace Microsoft.Web
-
+                az config set extension.use_dynamic_install=yes_without_prompt
+                az provider register --namespace Microsoft.App
+                
                 RESOURCE_GROUP="azure-container-rg"
                 LOG_ANALYTICS_WORKSPACE="tamopsacrcontainersla"
                 CONTAINERAPPS_ENVIRONMENT="tamops-environment"
@@ -112,7 +109,7 @@ stages :
                   --image tamopsacrcontainers.azurecr.io/sampleapp:'$(Build.BuildId)' \
                   --min-replicas 2 \
                   --max-replicas 2 \
-                  --registry-login-server tamopsacrcontainers.azurecr.io \
+                  --registry-server tamopsacrcontainers.azurecr.io \
                   --registry-username tamopsacrcontainers \
                   --registry-password $(acrpassword) \
                   --target-port 80 \
