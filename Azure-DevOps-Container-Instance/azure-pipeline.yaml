@@ -106,11 +106,4 @@ stages :
                 az containerapp update \
                   --name tamopsapp \
                   --resource-group $RESOURCE_GROUP \
-                  --image tamopsacrcontainers.azurecr.io/sampleapp:'$(Build.BuildId)' \
-                  --min-replicas 2 \
-                  --max-replicas 2 \
-                  --registry-server tamopsacrcontainers.azurecr.io \
-                  --registry-username tamopsacrcontainers \
-                  --registry-password $(acrpassword) \
-                  --target-port 80 \
-                  --ingress 'external'
+                  --image scottishsummitcontainers.azurecr.io/sampleapp:'$(Build.BuildId)'
