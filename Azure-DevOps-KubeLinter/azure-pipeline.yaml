@@ -1,0 +1,22 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages :
+  - stage: KubeLinter
+    jobs:
+      - job: "KubeLinter"
+        steps:
+          - task: Bash@3
+            displayName: "KubeLinter Checks"
+            inputs:
+              targetType: 'inline'
+              script: |
+                docker run --rm -v $(pwd):/examples stackrox/kube-linter lint /examples/ignore-check
