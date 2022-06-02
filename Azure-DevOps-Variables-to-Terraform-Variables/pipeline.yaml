@@ -1,0 +1,65 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+
+pr: none
+
+variables:
+  - name: backendServiceArm
+    value: 'thomasthorntoncloud'
+  - name: backendAzureRmResourceGroupName
+    value: 'thomasthorntoncloud'
+  - name: backendAzureRmStorageAccountName
+    value: 'thomasthorntontfstate'
+  - name: backendAzureRmContainerName
+    value: 'adovariableottf'
+  - name: backendAzureRmKey
+    value: 'terraform.tfstate'
+  - name: environment
+    value: 'production'
+
+stages :
+  - stage: terraform
+    jobs:
+    - job: validate
+      continueOnError: false
+      steps:
+      - task: TerraformInstaller@0
+        displayName: 'install'
+        inputs:
+          terraformVersion: '1.1.7'
+      - task: TerraformTaskV2@2
+        displayName: 'init'
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          backendServiceArm: 'thomasthorntoncloud'
+          backendAzureRmResourceGroupName: '${{ variables.backendAzureRmResourceGroupName}}'
+          backendAzureRmStorageAccountName: '${{ variables.backendAzureRmStorageAccountName}}'
+          backendAzureRmContainerName: '${{ variables.backendAzureRmContainerName }}'
+          backendAzureRmKey: 'terraform.tfstate'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+      - task: TerraformTaskV2@2
+        displayName: 'validate'
+        inputs:
+          provider: 'azurerm'
+          command: 'validate'
+
+      - task: TerraformTaskV2@2
+        displayName: 'plan'
+        inputs:
+          provider: 'azurerm'
+          command: 'plan'
+          commandOptions: '-input=false -var-file="../terraform/environments/$(Environment)/$(Environment).tfvars"'
+          environmentServiceNameAzureRM: 'thomasthorntoncloud'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'         
+ 
+      # - task: TerraformTaskV2@2
+      #   displayName: 'apply'
+      #   inputs:
+      #     provider: 'azurerm'
+      #     command: 'apply'
+      #     commandOptions: '-input=false -auto-approve -var-file="../$(Environment)/$(Environment).tfvars"'
+      #     environmentServiceNameAzureRM: 'thomasthorntoncloud'
+      #     workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
