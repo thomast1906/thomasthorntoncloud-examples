@@ -25,4 +25,5 @@ resource "azurerm_storage_blob" "tamopsblobs" {
   storage_container_name = azurerm_storage_container.tamopssacontainer.name
   type                   = "Block"
   source                 = each.key
+  content_md5            = filemd5(each.key)
 }
