@@ -1,0 +1,26 @@
+parameters:
+  - name: tag
+    displayName: tag
+    type: string
+    default: '0.0.1'
+
+variables:
+  - name: tag_name
+    value: ${{ parameters.tag }}
+
+resources:
+  repositories:
+  - repository: dynamic-checkout-repo2
+    type: github
+    ref: 'refs/tags/$(tag_name)'
+    name: thomast1906/dynamic-checkout-repo2
+    endpoint: 'thomast1906'
+
+stages:
+  - stage: stage1
+    jobs:
+    - job: stage1job
+      steps:
+        - checkout: self
+        - checkout: dynamic-checkout-repo2
+
