@@ -1,0 +1,26 @@
+parameters:
+  - name: branch
+    displayName: branch
+    type: string
+    default: 'testbranch'
+
+variables:
+  - name: branch_name
+    value: ${{ parameters.branch }}
+
+resources:
+  repositories:
+  - repository: dynamic-checkout-repo2
+    type: github
+    ref: 'refs/heads/$(branch_name)'
+    name: thomast1906/dynamic-checkout-repo2
+    endpoint: 'thomast1906'
+
+stages:
+  - stage: stage1
+    jobs:
+    - job: stage1job
+      steps:
+        - checkout: self
+        - checkout: dynamic-checkout-repo2
+
