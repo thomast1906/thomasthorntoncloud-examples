@@ -1,0 +1,43 @@
+  jobs:
+    - job: azcli_resourcegroup_create
+      steps:
+          - task: AzureCLI@2
+            displayName: 'BootStrap AKS Cluster'
+            inputs:
+              azureSubscription: 'thomasthorntoncloud'
+              scriptType: bash
+              scriptLocation: inlineScript
+              addSpnToEnvironment: true
+              inlineScript: |
+                #!/usr/bin/env bash
+                set -x
+
+                AKS_RG="tamopsakstest-rg"
+                AKS_NAME="tamopsakstest"
+
+                # Get AKS Credentials
+                az aks get-credentials -g $AKS_RG -n $AKS_NAME --admin
+          - task: TerraformInstaller@0
+            displayName: 'install'
+            inputs:
+              terraformVersion: '${{ parameters.terraform_version }}'
+          - task: TerraformTaskV2@2
+            displayName: 'init'
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: '${{ parameters.backendServiceArm }}'
+              backendAzureRmResourceGroupName: '${{ parameters.backendAzureRmResourceGroupName }}'
+              backendAzureRmStorageAccountName: '${{ parameters.backendAzureRmStorageAccountName }}'
+              backendAzureRmContainerName: '${{ parameters.backendAzureRmContainerName }}'
+              backendAzureRmKey: '${{ parameters.backendAzureRmKey }}' 
+              workingDirectory: '$(System.DefaultWorkingDirectory)/terraform_aks_config/'
+          - task: TerraformTaskV2@2
+            displayName: 'apply'
+            condition: and(succeeded(), eq(variables['Action'], 'Apply'))
+            inputs:
+              provider: 'azurerm'
+              command: 'apply'
+              commandOptions: '-input=false -auto-approve -var-file="../${{ parameters.environment }}/${{ parameters.environment }}.tfvars"'
+              environmentServiceNameAzureRM: '${{ parameters.backendServiceArm }}'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/terraform_aks_config/'
