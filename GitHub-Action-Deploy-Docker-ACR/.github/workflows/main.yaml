@@ -1,0 +1,34 @@
+name: docker_build_push_acr
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker_build_push_acr:
+    name: 'Docker Build and Push to ACR'
+    runs-on: ubuntu-latest
+    environment: production
+ 
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+ 
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v2
+ 
+    - name: 'Docker Login'
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Build the frontend image and push it to ACR
+      uses: docker/build-push-action@v2
+      with:
+        push: true
+        tags: tamopsgithubacr.azurecr.io/aspcoresample:${{ github.sha }}
+        file: aspnet-core-dotnet-core/Dockerfile
