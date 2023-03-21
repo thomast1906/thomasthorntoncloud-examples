@@ -1,0 +1,35 @@
+name: github_action_azure_kv_secrets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker_build_push_acr:
+    name: 'GitHub Action to retreive secrets from Azure Key Vault and deploy example resource groups to Azure'
+    runs-on: ubuntu-18.04
+    environment: production
+  
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v2
+ 
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: 'Get secrets'
+      id: azure-keyvault-secrets
+      run: |
+        secrets_get=(example1 example2)
+        for secret_get in ${secrets_get[@]}
+        do
+          value=$(az keyvault secret show --name $secret_get --vault-name tamopskvexample --query value --output tsv)
+          echo "::add-mask::$value"
+          echo "$secret_get=$value" >> $GITHUB_OUTPUT
+        done
+
+    - name: Create resource groups with secret values
+      run: |
+        az group Create --name ${{ steps.azure-keyvault-secrets.outputs.example1 }} --location uksouth
+        az group Create --name ${{ steps.azure-keyvault-secrets.outputs.example2 }} --location uksouth
