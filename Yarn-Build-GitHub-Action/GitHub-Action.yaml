@@ -1,0 +1,50 @@
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+name: Publish
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+
+      - name: Install yarn
+        run: yarn install -g 
+
+      - name: yarn build+install
+        run: |
+            yarn install --frozen-lockfile
+            yarn tsc
+            yarn build:backend
+
+      - name: Generate build ID
+        id: buildid
+        run: |
+          sha=${GITHUB_SHA::8}
+          ts=$(date +%s)
+          echo "::set-output name=BUILD_ID::${sha}-${ts}"
+
+      - name: 'Build and push image'
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - run: |
+          DOCKER_BUILDKIT=1 docker image build . -f packages/backend/Dockerfile -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/backstage:${{ steps.buildid.outputs.BUILD_ID }}
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/backstage:${{ steps.prep.outputs.BUILD_ID }}
