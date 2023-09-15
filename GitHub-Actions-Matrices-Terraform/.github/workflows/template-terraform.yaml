@@ -1,0 +1,87 @@
+name: Reusable workflow example
+
+on:
+  workflow_call:
+    inputs:
+      backend_tfstate_name:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+      backend_tf_rg:
+        required: true
+        type: string
+      backend_tf_sa:
+        required: true
+        type: string
+      platform_directory:
+        required: true
+        type: string
+      tfstate_container:
+        required: true
+        type: string
+    secrets:
+      CLIENT_ID:
+        required: true
+      CLIENT_SECRET:
+        required: true
+      SUBSCRIPTION_ID:
+        required: true
+      TENANT_ID:
+        required: true
+      DEPLOYMENT_SUBSCRIPTION_ID:
+        required: true
+
+
+jobs:
+  deploy-terraform:
+    name: ${{ inputs.platform_directory }}
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+ 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.3
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend-config="resource_group_name=${{ inputs.backend_tf_rg }}" -backend-config="storage_account_name=${{ inputs.backend_tf_sa }}" -backend-config="container_name=${{ inputs.tfstate_container }}" -backend-config="key=${{ inputs.backend_tfstate_name }}.tfstate"
+        env:
+          ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+        working-directory: ./platform/${{ inputs.platform_directory }}
+        shell: bash
+          
+      - name: Terraform Plan  
+        id: plan
+        run: terraform plan -no-color -input=false -var deployment_subscription_id=$DEPLOYMENT_SUBSCRIPTION_ID -var-file="../../environments/${{ inputs.environment }}/${{ inputs.environment }}.tfvars"
+        env:
+          ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+          DEPLOYMENT_SUBSCRIPTION_ID: ${{ secrets.DEPLOYMENT_SUBSCRIPTION_ID }}
+        working-directory: ./platform/${{ inputs.platform_directory }}
+        shell: bash
+        continue-on-error: false
+
+      - name: Terraform Apply  
+        id: apply
+        run: terraform apply -auto-approve -var deployment_subscription_id=$DEPLOYMENT_SUBSCRIPTION_ID -var-file="../../environments/${{ inputs.environment }}/${{ inputs.environment }}.tfvars"
+        if: github.ref == 'refs/heads/main'
+        env:
+          ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+          DEPLOYMENT_SUBSCRIPTION_ID: ${{ secrets.DEPLOYMENT_SUBSCRIPTION_ID }}
+        working-directory: ./platform/${{ inputs.platform_directory }}
+        shell: bash
+        continue-on-error: false
