@@ -7,7 +7,7 @@ data "azurerm_key_vault" "thomasthorntoncloudkv" {
 # Reference Key Vault Secret
 data "azurerm_key_vault_secret" "secret1" {
   name         = "secret1"
-  key_vault_id = data.azurerm_key_vault.existing.id
+  key_vault_id = data.azurerm_key_vault.thomasthorntoncloudkv.id
 }
 
 resource "azurerm_resource_group" "main" {
