@@ -1,9 +1,7 @@
 ## How to use If-Else in Terraform
 
-In my previous blog post, I detailed how to import 3 Azure resources until Terraform state, a manual approach that is fine for a few resources; what happens if there are 100s of the same resource already configured in Azure?
+Having been writing alot recent on if, else in various tools I use, and now it's time to explore what Terraform brings to the table. As with any Infrastructure as Code (IaC) solution, there often comes a need to incorporate logic and conditionals into your configurations, enabling you to make choices based on specific criteria.
 
-Recently in my current project I was wanting to import 300+ private DNS A Records into terraform state, this couldn't have been a manual approach as it would have taken so long!
+In this blog post, we'll dive into Terraform's capabilities for incorporating conditional logic, covering some popular techniques such as conditional expressions, the 'count' parameter, and the powerful 'dynamic' blocks.
 
-What did I decide to do? Create a script to do this using bash/AZ CLI
-
-[Blog post here](https://thomasthornton.cloud/2021/04/08/importing-terraform-state-at-scale-in-azure/)
+[Blog post here](https://thomasthornton.cloud/2023/10/16/how-to-use-if-else-in-terraform/)
