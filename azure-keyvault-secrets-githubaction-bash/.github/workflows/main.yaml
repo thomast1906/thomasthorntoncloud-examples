@@ -6,7 +6,7 @@ on:
 jobs:
   docker_build_push_acr:
     name: 'GitHub Action to retreive secrets from Azure Key Vault and deploy example resource groups to Azure'
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     environment: production
   
     steps:
