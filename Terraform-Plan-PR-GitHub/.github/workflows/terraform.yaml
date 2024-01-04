@@ -1,0 +1,98 @@
+name: Terraform Plan
+on: 
+  push:
+    branches:
+     - main
+  pull_request:
+    branches:
+     - main
+  workflow_dispatch:
+
+env:
+  tf_resource_group_name: "thomasthorntoncloud"
+  tf_storage_account_name: "thomasthorntontfstate"
+  tf_state_container: "github-tfplan-output-to-pr"
+  tf_state_key: "terraform.tfstate"
+      
+jobs: 
+  terraform-plan-output:
+    if: github.event_name == 'pull_request'
+    defaults:
+      run:
+        working-directory: terraform-example-deploy
+    name: Terraform
+    environment: production
+    runs-on: ubuntu-latest
+    env:
+      ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
+      ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+      ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2.5.0
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_wrapper: true
+
+    - name: Terraform Init
+      id: init
+      run: terraform init -backend-config="resource_group_name=$tf_resource_group_name" -backend-config="storage_account_name=$tf_storage_account_name" -backend-config="container_name=$tf_state_container" -backend-config="key=$tf_state_key"
+      env:
+        ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+        ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+        ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+        ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+      working-directory: ./terraform
+        
+    - name: Terraform Fmt
+      id: fmt
+      run: terraform fmt -check
+      working-directory: ./terraform
+
+    - name: Terraform Validate
+      id: validate
+      run: terraform validate -no-color
+      working-directory: ./terraform
+      
+    - name: Terraform Plan  
+      id: plan
+      run: terraform plan -no-color -var deployment_subscription_id=$DEPLOYMENT_SUBSCRIPTION_ID
+      env:
+        ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+        ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+        ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+        ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+        DEPLOYMENT_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+      working-directory: ./terraform
+      continue-on-error: false
+      
+    - name: Update Pull Request
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.USER_TOKEN }}
+        script: |
+          const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+          #### Terraform Initialization 🤖\`${{ steps.init.outcome }}\`
+          #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+          #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+          <details><summary>Show Plan</summary>
+
+          \`\`\`\n
+          ${{ steps.plan.outputs.stdout }}
+          \`\`\`
+
+          </details>
+
+          *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+    - name: Terraform Plan Status
+      if: steps.plan.outcome == 'failure'
+      run: exit 1
