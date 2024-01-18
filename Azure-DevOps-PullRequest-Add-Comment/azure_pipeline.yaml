@@ -1,0 +1,31 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+
+pr: none
+
+stages :
+  - stage: example
+    jobs:
+    - job: example
+      continueOnError: false
+      steps:
+      - task: Bash@3
+        displayName: 'Example PR Comment'
+        inputs:
+          targetType: 'inline'
+          script: |
+            COMMENT=$(echo "Test PR comment from Azure DevOps Pipeline")
+            
+            ADO_API=$(echo "$(System.CollectionUri)$(System.TeamProject)/_apis/git/repositories/$(Build.Repository.Name)/pullRequests/$(System.PullRequest.PullRequestId)/threads?api-version=7.1-preview.1")
+
+            PR_COMMENT=$(jq --arg comment "$COMMENT" '.comments[0].content = $comment' <<< '{"comments": [{"parentCommentId": 0,"content": "","commentType": 1}],"status": 1}')
+
+            curl --request POST "$ADO_API" \
+            --header "Content-Type: application/json" \
+            --header "Accept: application/json" \
+            --header "Authorization: Bearer $SYSTEM_ACCESSTOKEN" \
+            --data "$PR_COMMENT" \
+            --verbose
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
