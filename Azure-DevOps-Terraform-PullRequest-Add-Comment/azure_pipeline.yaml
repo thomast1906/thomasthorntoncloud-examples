@@ -1,0 +1,90 @@
+name: $(BuildDefinitionName)_$(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+
+pr: none
+
+variables:
+  - name: backendServiceArm
+    value: 'thomasthorntonautomatic'
+  - name: backendAzureRmResourceGroupName
+    value: 'thomasthorntoncloud'
+  - name: backendAzureRmStorageAccountName
+    value: 'thomasthorntontfstate'
+  - name: backendAzureRmContainerName
+    value: 'ado-terraform-pr-plan-output'
+  - name: backendAzureRmKey
+    value: 'terraform.tfstate'
+  - name: deployment_subscription_id
+    value: '04109105-f3ca-44ac-a3a7-66b4936112c3'
+
+
+stages :
+  - stage: terraform
+    jobs:
+    - job: validate
+      continueOnError: false
+      steps:
+      - task: TerraformInstaller@0
+        displayName: 'install'
+        inputs:
+          terraformVersion: '1.6.0'
+
+      - task: TerraformTaskV4@4
+        displayName: 'init'
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          backendServiceArm: '${{ variables.backendServiceArm}}'
+          backendAzureRmResourceGroupName: '${{ variables.backendAzureRmResourceGroupName}}'
+          backendAzureRmStorageAccountName: '${{ variables.backendAzureRmStorageAccountName}}'
+          backendAzureRmContainerName: '${{ variables.backendAzureRmContainerName }}'
+          backendAzureRmKey: 'terraform1.tfstate'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+      - task: TerraformTaskV4@4
+        displayName: 'validate'
+        inputs:
+          provider: 'azurerm'
+          command: 'validate'
+
+      - task: TerraformTaskV4@4
+        displayName: 'plan'
+        inputs:
+          provider: 'azurerm'
+          command: 'plan'
+          commandOptions: '-input=false -var deployment_subscription_id=$(deployment_subscription_id) -out=plan.tfplan'
+          environmentServiceNameAzureRM: '${{ variables.backendServiceArm}}'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+      - task: Bash@3
+        displayName: 'show'
+        inputs:
+          targetType: 'inline'
+          script: |
+            cd $workingDirectory
+            terraform show -no-color plan.tfplan > tf_plan.txt
+            cat NonProdPlan.txt
+        env:
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+
+      - task: Bash@3
+        displayName: 'Terraform Plan to Azure DevOps'
+        inputs:
+          targetType: 'inline'
+          script: |
+            TF_PLAN=$(cat $workingDirectory/tf_plan.txt)
+
+            ADO_API=$(echo "$(System.CollectionUri)$(System.TeamProject)/_apis/git/repositories/$(Build.Repository.Name)/pullRequests/$(System.PullRequest.PullRequestId)/threads?api-version=7.1-preview.1")
+
+            TF_PLAN_comment=$(jq --arg comment "$TF_PLAN" '.comments[0].content = $comment' <<< '{"comments": [{"parentCommentId": 0,"content": "","commentType": 1}],"status": 1}')
+
+            curl --request POST "$ADO_API" \
+            --header "Authorization: Bearer $SYSTEM_ACCESSTOKEN" \
+            --header "Accept: application/json" \
+            --header "Content-Type: application/json" \
+            --data "$TF_PLAN_comment" \
+            --verbose
+        env:
+          workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
