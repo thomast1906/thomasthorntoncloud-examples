@@ -64,7 +64,6 @@ stages :
           script: |
             cd $workingDirectory
             terraform show -no-color plan.tfplan > tf_plan.txt
-            cat NonProdPlan.txt
         env:
           workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/'
 
