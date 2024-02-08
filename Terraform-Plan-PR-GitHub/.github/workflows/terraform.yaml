@@ -69,7 +69,7 @@ jobs:
       continue-on-error: false
       
     - name: Update Pull Request
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         github-token: ${{ secrets.USER_TOKEN }}
         script: |
