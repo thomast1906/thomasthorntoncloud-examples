@@ -23,7 +23,7 @@ var virtualNetwork = {
   ]
 }
 
-resource virtualnetwork 'Microsoft.Network/virtualNetworks@2020-06-01' = {
+resource virtualnetwork 'Microsoft.Network/virtualNetworks@2023-09-01' = {
   name: virtualNetwork.name
   location: virtualNetwork.location
   properties: {
