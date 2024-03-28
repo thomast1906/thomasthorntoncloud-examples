@@ -20,3 +20,15 @@ resource "azurerm_postgresql_flexible_server" "tamopspsql" {
 
   sku_name = "GP_Standard_D4s_v3"
 }
+
+resource "azurerm_postgresql_flexible_server_configuration" "logfiles_download_enable" {
+  name      = "logfiles.download_enable"
+  server_id = azurerm_postgresql_flexible_server.tamopspsql.id
+  value     = "ON"
+}
+
+resource "azurerm_postgresql_flexible_server_configuration" "logfiles_retention_days" {
+  name      = "logfiles.retention_days"
+  server_id = azurerm_postgresql_flexible_server.tamopspsql.id
+  value     = "5"
+}
