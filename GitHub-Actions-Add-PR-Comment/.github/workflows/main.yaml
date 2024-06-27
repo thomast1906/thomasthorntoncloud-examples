@@ -1,0 +1,27 @@
+name: Add comment to PR example
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs: 
+  add-comment-to-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set variable_example
+        run: echo "variable_example=thomasthornton.cloud" >> $GITHUB_ENV
+      - name: Add comment to PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              issue_number: context.issue.number,
+              repo: context.repo.repo,
+              body: process.env.variable_example
+            })
