@@ -18,7 +18,7 @@ locals {
       access                       = "Allow"
       protocol                     = "Tcp"
       source_port_range            = "*"
-      destination_port_range       = "53,389,636"
+      destination_port_ranges      = "53,389,636"
       source_address_prefixes      = ["10.100.52.39/32", "10.100.52.49/32"]
       destination_address_prefixes = ["10.100.52.10/32", "10.100.62.10/32"]
     }
