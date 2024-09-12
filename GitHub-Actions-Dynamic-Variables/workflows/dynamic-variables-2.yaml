@@ -1,0 +1,31 @@
+name: Dynamic Environment Variables
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  dynamic-variables-2:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set environment variables
+        run: |
+          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+            echo "ENVIRONMENT_LOCATION=uksouth" >> $GITHUB_ENV
+            echo "ENVIRONMENT_URL=https://thomasthornton.cloud" >> $GITHUB_ENV
+          elif [[ ${{ github.ref }} == 'refs/heads/staging' ]]; then
+            echo "ENVIRONMENT_LOCATION=ukwest" >> $GITHUB_ENV
+            echo "ENVIRONMENT_URL=https://staging.thomasthornton.cloud" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT_LOCATION=westeurope" >> $GITHUB_ENV
+            echo "ENVIRONMENT_URL=https://dev.thomasthornton.cloud" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy environment variables
+        run: |
+          echo "Deploying to $ENVIRONMENT_URL in location: $ENVIRONMENT_LOCATION"
