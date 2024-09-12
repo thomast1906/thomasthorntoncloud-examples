@@ -1,0 +1,24 @@
+name: Dynamic Environment Variables
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  dynamic-variables-4:
+  config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set multi-line variable
+        run: |
+          EOF=$(uuidgen)
+          echo "CONFIG_EXAMPLE<<$EOF" >> $GITHUB_ENV
+          echo "blog_name: thomasthornton.cloud" >> $GITHUB_ENV
+          echo "sql_connections: 10000" >> $GITHUB_ENV
+          echo "timeout: 60s" >> $GITHUB_ENV
+          echo "$EOF" >> $GITHUB_ENV
+
+      - name: Echo multi-line variable
+        run: |
+          echo "$CONFIG_EXAMPLE"
