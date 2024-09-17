@@ -1,0 +1,35 @@
+name: Dynamic matrix
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Get test directories
+        run: |
+          DIRECTORIES=$(ls -d */ | jq -R -s -c 'split("\n")[:-1]')
+          echo "DIRECTORIES=$DIRECTORIES" >> $GITHUB_ENV
+
+    outputs:
+      directories: ${{ env.DIRECTORIES }}
+
+  per-folder:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: ${{fromJson(needs.prepare.outputs.directories)}}
+    steps:
+      - name: Run echo on directories
+        run: |
+          echo ${{ matrix.dir }}
+
+
+
+
