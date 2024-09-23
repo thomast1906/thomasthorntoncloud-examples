@@ -17,7 +17,7 @@ jobs:
         run: mkdir -p ../results
 
       - name: Scan yaml files with kube-linter
-        uses: stackrox/kube-linter-action@v1.0.4
+        uses: stackrox/kube-linter-action@v1.0.5
         id: kube-linter-action-scan
         with:
           # Adjust this directory to the location where your kubernetes resources and helm charts are located.
