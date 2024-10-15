@@ -1,0 +1,111 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "logic_app_name": {
+            "type": "String"
+        },
+
+        "location": {
+            "defaultValue": "uksouth",
+            "type": "String"
+        }
+     },
+    "variables": {
+      
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('logic_app_name')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "state": "Enabled",
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Create_blob_(V2)": {
+                "inputs": {
+                    "body": "@utcNow()",
+                    "headers": {
+                        "ReadFileMetadataFromServer": true
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('tamopslogicappsa'))}/files",
+                    "queries": {
+                        "folderPath": "/tamopslogicappsc",
+                        "name": "thomas-blob-@{utcNow()}",
+                        "queryParametersSingleEncoded": true
+                    }
+                },
+                "runAfter": {},
+                "runtimeConfiguration": {
+                    "contentTransfer": {
+                        "transferMode": "Chunked"
+                    }
+                },
+                "type": "ApiConnection"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "Recurrence": {
+                "evaluatedRecurrence": {
+                    "frequency": "Day",
+                    "interval": 1,
+                    "schedule": {
+                        "minutes": [
+                            0
+                        ]
+                    }
+                },
+                "recurrence": {
+                    "frequency": "Day",
+                    "interval": 1,
+                    "schedule": {
+                        "minutes": [
+                            0
+                        ]
+                    }
+                },
+                "type": "Recurrence"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "azureblob": {
+                    "connectionId": "/subscriptions/04109105-f3ca-44ac-a3a7-66b4936112c3/resourceGroups/tamops-logicapps-rg/providers/Microsoft.Web/connections/azureblob",
+                    "connectionName": "azureblob",
+                    "connectionProperties": {
+                        "authentication": {
+                            "identity": "/subscriptions/04109105-f3ca-44ac-a3a7-66b4936112c3/resourceGroups/tamops-logicapps-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/tamops-logicapp-mi",
+                            "type": "ManagedServiceIdentity"
+                        }
+                    },
+                    "id": "/subscriptions/04109105-f3ca-44ac-a3a7-66b4936112c3/providers/Microsoft.Web/locations/uksouth/managedApis/azureblob"
+                }
+            }
+        }
+    }
+            }
+        }
+        
+    ],
+    "outputs": {
+     }
+}
+
