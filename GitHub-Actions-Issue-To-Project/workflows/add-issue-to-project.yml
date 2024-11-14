@@ -1,0 +1,63 @@
+name: Add Issue to Project Todo Column
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  add-to-project:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.SECRET_PAT }}
+      ISSUE_URL: ${{ github.event.issue.html_url }}
+      PROJECT_OWNER: thomasthorntoncloud
+      PROJECT_NUMBER: 1
+    steps:
+      - name: Add issue to project Todo column
+        run: |
+          # Get project ID
+          PROJECT_ID=$(gh project view $PROJECT_NUMBER --owner $PROJECT_OWNER --format json | jq -r '.id')
+          echo "Project ID: $PROJECT_ID"
+
+          # Add issue to project
+          echo "Adding issue to project..."
+          ITEM_ID=$(gh project item-add $PROJECT_NUMBER --owner "$PROJECT_OWNER" --url "$ISSUE_URL" --format json | jq -r '.id')
+          echo "ITEM_ID: $ITEM_ID"
+
+          if [ -z "$ITEM_ID" ]; then
+            echo "Error: Failed to add issue to project."
+            exit 1
+          fi
+
+          # Get the Status field ID and Todo option ID
+          echo "Fetching project fields..."
+          FIELDS=$(gh project field-list $PROJECT_NUMBER --owner "$PROJECT_OWNER" --format json)
+          STATUS_FIELD=$(echo "$FIELDS" | jq -r '.fields[] | select(.name == "Status")')
+          STATUS_FIELD_ID=$(echo "$STATUS_FIELD" | jq -r '.id')
+          TODO_OPTION_ID=$(echo "$STATUS_FIELD" | jq -r '.options[] | select(.name == "Todo") | .id')
+
+          echo "STATUS_FIELD_ID: $STATUS_FIELD_ID"
+          echo "TODO_OPTION_ID: $TODO_OPTION_ID"
+
+          if [ -z "$STATUS_FIELD_ID" ] || [ -z "$TODO_OPTION_ID" ]; then
+            echo "Error: Could not find Status field or Todo option."
+            exit 1
+          fi
+
+          # Set the Status to Todo
+          echo "Setting issue status to Todo..."
+          RESULT=$(gh project item-edit $PROJECT_NUMBER \
+            --id "$ITEM_ID" \
+            --project-id "$PROJECT_ID" \
+            --field-id "$STATUS_FIELD_ID" \
+            --single-select-option-id "$TODO_OPTION_ID" \
+            --format json)
+
+          echo "RESULT: $RESULT"
+
+          if echo "$RESULT" | jq -e '.id' > /dev/null; then
+            echo "Issue successfully added to project and set to Todo status."
+          else
+            echo "Error updating issue status: $RESULT"
+            exit 1
+          fi
