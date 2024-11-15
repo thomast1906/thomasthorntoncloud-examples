@@ -1,0 +1,65 @@
+name: Move Issue to Done When Closed
+
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  move-to-done:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.SECRET_PAT }}
+      PROJECT_OWNER: thomasthorntoncloud
+      PROJECT_NUMBER: 1
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+    steps:
+      - name: Move issue to Done
+        run: |
+          # Get project ID
+          PROJECT_ID=$(gh project view $PROJECT_NUMBER --owner $PROJECT_OWNER --format json | jq -r '.id')
+          echo "Project ID: $PROJECT_ID"
+
+          # Get all fields
+          FIELDS=$(gh project field-list $PROJECT_NUMBER --owner $PROJECT_OWNER --format json)
+          echo "All fields:"
+          echo "$FIELDS" | jq '.'
+
+          STATUS_FIELD=$(echo "$FIELDS" | jq -r '.fields[] | select(.name == "Status")')
+          STATUS_FIELD_ID=$(echo "$STATUS_FIELD" | jq -r '.id')
+          DONE_OPTION_ID=$(echo "$STATUS_FIELD" | jq -r '.options[] | select(.name == "Done") | .id')
+          
+          echo "STATUS_FIELD_ID: $STATUS_FIELD_ID"
+          echo "DONE_OPTION_ID: $DONE_OPTION_ID"
+
+          # Find the item ID for the closed issue
+          ITEM_ID=""
+          echo "Fetching items..."
+          ITEMS_RESPONSE=$(gh project item-list $PROJECT_NUMBER --owner $PROJECT_OWNER --format json --limit 10000)
+
+          # Extract the item ID if the issue is found
+          ITEM_ID=$(echo "$ITEMS_RESPONSE" | jq -r --arg ISSUE_NUMBER "$ISSUE_NUMBER" '.items[] | select(.content.number == ($ISSUE_NUMBER | tonumber)) | .id')
+
+          if [ -n "$ITEM_ID" ]; then
+            echo "Item found with ID: $ITEM_ID"
+          else
+            echo "Error: Could not find the issue in the project. Skipping status update."
+            exit 0
+          fi
+
+          echo "ITEM_ID: $ITEM_ID"
+
+          # Set the Status to Done
+          echo "Updating item status to Done..."
+          RESULT=$(gh project item-edit $PROJECT_NUMBER \
+            --id "$ITEM_ID" \
+            --project-id "$PROJECT_ID" \
+            --field-id "$STATUS_FIELD_ID" \
+            --single-select-option-id "$DONE_OPTION_ID" \
+            --format json)
+
+          if echo "$RESULT" | jq -e '.id' > /dev/null; then
+            echo "Issue successfully moved to Done status."
+          else
+            echo "Error: Updating issue status: $RESULT"
+            exit 1
+          fi
