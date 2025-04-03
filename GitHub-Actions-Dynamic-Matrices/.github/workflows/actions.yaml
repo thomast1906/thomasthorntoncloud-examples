@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Get test directories
         run: |
           DIRECTORIES=$(ls -d */ | jq -R -s -c 'split("\n")[:-1]')
