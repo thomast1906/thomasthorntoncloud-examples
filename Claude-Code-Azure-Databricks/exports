@@ -1,0 +1,4 @@
+export ANTHROPIC_BASE_URL="http://localhost:4000" 
+export ANTHROPIC_API_KEY="sk-1234" 
+export ANTHROPIC_MODEL="databricks-claude-sonnet-4"
+export ANTHROPIC_MODEL="databricks-claude-3-7-sonnet"

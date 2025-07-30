@@ -1,0 +1,11 @@
+model_list:
+  - model_name: databricks-claude-sonnet-4
+    litellm_params:
+      model: databricks/databricks-claude-sonnet-4
+      api_key: os.environ/DATABRICKS_API_KEY
+      api_base: os.environ/DATABRICKS_API_BASE
+  - model_name: databricks-claude-3-7-sonnet
+    litellm_params:
+      model: databricks/databricks-claude-3-7-sonnet
+      api_key: os.environ/DATABRICKS_API_KEY
+      api_base: os.environ/DATABRICKS_API_BASE

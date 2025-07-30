@@ -1,0 +1,17 @@
+version: '3'
+services:
+  litellm:
+    build:
+      context: https://github.com/BerriAI/litellm.git
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    env_file:
+      - .env
+    environment:
+      - DATABRICKS_API_KEY=${DATABRICKS_API_KEY}
+      - DATABRICKS_API_BASE=${DATABRICKS_API_BASE}
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    ports:
+      - "4000:4000"
+    command: litellm --config /app/config.yaml --port 4000 --debug
