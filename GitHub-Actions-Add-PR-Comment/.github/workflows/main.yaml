@@ -15,7 +15,7 @@ jobs:
       - name: Set variable_example
         run: echo "variable_example=thomasthornton.cloud" >> $GITHUB_ENV
       - name: Add comment to PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
