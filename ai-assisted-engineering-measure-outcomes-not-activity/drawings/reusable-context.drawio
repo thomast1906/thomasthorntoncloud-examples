@@ -1,0 +1,69 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="jcX6wVIuzdJOJlOUoVE5">
+    <mxGraphModel dx="1552" dy="1068" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=28;fontStyle=1;fontColor=#1f2937;" value="Reusable Context Stack" vertex="1">
+          <mxGeometry height="40" width="880" x="360" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#4b5563;" value="The smallest authoritative context set usually gives the best repeatable result" vertex="1">
+          <mxGeometry height="26" width="1080" x="260" y="58" as="geometry" />
+        </mxCell>
+        <mxCell id="stackPanel" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#94a3b8;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry height="740" width="760" x="60" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="stackHead" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;fontColor=#0f172a;" value="Context inputs that improve the run" vertex="1">
+          <mxGeometry height="30" width="560" x="160" y="124" as="geometry" />
+        </mxCell>
+        <mxCell id="stackSub" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#475569;" value="Each layer reduces guesswork and makes the output easier to trust" vertex="1">
+          <mxGeometry height="24" width="640" x="120" y="154" as="geometry" />
+        </mxCell>
+        <mxCell id="c1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#64748b;strokeWidth=2;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;fontColor=#0f172a;spacingLeft=18;" value="Repository instructions including: Naming, standards, patterns" vertex="1">
+          <mxGeometry height="90" width="540" x="120" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#60a5fa;strokeWidth=2;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;fontColor=#0f172a;spacingLeft=18;" value="Skills &amp;amp; Reusable domain guidance" vertex="1">
+          <mxGeometry height="90" width="540" x="140" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ccfbf1;strokeColor=#14b8a6;strokeWidth=2;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;fontColor=#0f172a;spacingLeft=18;" value="MCP tools: Live context and actions" vertex="1">
+          <mxGeometry height="90" width="540" x="160" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#f59e0b;strokeWidth=2;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;fontColor=#0f172a;spacingLeft=18;" value="Reference files:Docs, ADRs, examples" vertex="1">
+          <mxGeometry height="90" width="540" x="180" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#22c55e;strokeWidth=2;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;fontColor=#0f172a;spacingLeft=18;" value="Validation scripts:Tests, lint, policy checks" vertex="1">
+          <mxGeometry height="90" width="540" x="200" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="stackNote" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef2ff;strokeColor=#a5b4fc;strokeWidth=1;dashed=1;fontSize=16;fontColor=#1f2937;align=center;verticalAlign=middle;" value="Stack these before the prompt, not after the fact." vertex="1">
+          <mxGeometry height="52" width="620" x="140" y="770" as="geometry" />
+        </mxCell>
+        <mxCell id="resultPanel" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#86efac;strokeWidth=2;" value="More consistent, safer output" vertex="1">
+          <mxGeometry height="460" width="660" x="880" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="resultHead" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;fontColor=#166534;" value="What the stack buys you" vertex="1">
+          <mxGeometry height="30" width="460" x="980" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#34d399;strokeWidth=2;align=center;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#14532d;" value="Less scope creep" vertex="1">
+          <mxGeometry height="72" width="560" x="940" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="r2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#34d399;strokeWidth=2;align=center;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#14532d;" value="Fewer review cycles" vertex="1">
+          <mxGeometry height="72" width="560" x="940" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="r3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#34d399;strokeWidth=2;align=center;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#14532d;" value="Safer validation" vertex="1">
+          <mxGeometry height="72" width="560" x="940" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="r4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#34d399;strokeWidth=2;align=center;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#14532d;" value="More reusable context over time" vertex="1">
+          <mxGeometry height="72" width="560" x="940" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="c5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;libavoidRouting=1;" target="resultPanel" value="feeds">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="810" y="695" />
+              <mxPoint x="810" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
