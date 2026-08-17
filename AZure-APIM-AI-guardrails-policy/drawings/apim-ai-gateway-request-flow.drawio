@@ -1,0 +1,108 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Two-Layer AI Governance Model" id="two-layer-ai-governance">
+    <mxGraphModel dx="2273" dy="982" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-1" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=15;" value="Runtime request flow through the APIM AI Gateway&#xa;llm-token-limit &amp;rarr; llm-content-safety &amp;rarr; backend &amp;rarr; llm-emit-token-metric" vertex="1">
+          <mxGeometry height="50" width="1600" x="557" y="405" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-2" parent="1" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=14;" value="Client / Application" vertex="1">
+          <mxGeometry height="150" width="1600" x="557" y="465" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-3" parent="_Yn_IapjeTjKeZJcNFmz-2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;strokeWidth=2;fontSize=11;" value="1. Chat completion request (prompt)" vertex="1">
+          <mxGeometry height="60" width="150" x="120" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-4" parent="_Yn_IapjeTjKeZJcNFmz-2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;fontSize=11;" value="Blocked: 403 Content Filtered" vertex="1">
+          <mxGeometry height="60" width="170" x="660" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-5" parent="_Yn_IapjeTjKeZJcNFmz-2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;strokeWidth=2;fontSize=11;" value="8. Response received" vertex="1">
+          <mxGeometry height="60" width="150" x="1380" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-6" parent="1" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#fff3e0;strokeColor=#e6821e;fontStyle=1;fontSize=14;" value="APIM AI Gateway" vertex="1">
+          <mxGeometry height="150" width="1600" x="557" y="615" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-7" parent="_Yn_IapjeTjKeZJcNFmz-6" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e6821e;strokeWidth=2;fontSize=11;" value="2. llm-token-limit: check quota" vertex="1">
+          <mxGeometry height="60" width="170" x="183" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-8" parent="_Yn_IapjeTjKeZJcNFmz-6" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e6821e;strokeWidth=2;fontSize=11;" value="3. llm-content-safety: shield-prompt" vertex="1">
+          <mxGeometry height="60" width="170" x="403" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-9" parent="_Yn_IapjeTjKeZJcNFmz-6" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e6821e;strokeWidth=2;fontSize=11;" value="4. Safety verdict: allowed" vertex="1">
+          <mxGeometry height="60" width="170" x="613" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-10" parent="_Yn_IapjeTjKeZJcNFmz-6" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e6821e;strokeWidth=2;fontSize=11;" value="5. Forward prompt (approved model only)" vertex="1">
+          <mxGeometry height="60" width="170" x="813" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-11" parent="_Yn_IapjeTjKeZJcNFmz-6" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e6821e;strokeWidth=2;fontSize=11;" value="6. Completion response received" vertex="1">
+          <mxGeometry height="60" width="170" x="1003" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-12" parent="_Yn_IapjeTjKeZJcNFmz-6" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e6821e;strokeWidth=2;fontSize=11;" value="7. llm-emit-token-metric: record usage" vertex="1">
+          <mxGeometry height="60" width="170" x="1243" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-13" parent="1" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#f3e5f5;strokeColor=#7B1FA2;fontStyle=1;fontSize=14;" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;Azure AI Content Safety&lt;/font&gt;" vertex="1">
+          <mxGeometry height="150" width="1600" x="557" y="765" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-14" parent="_Yn_IapjeTjKeZJcNFmz-13" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#7B1FA2;strokeWidth=2;fontSize=11;" value="Evaluate Hate / Violence categories&#xa;(severity &amp;ge; 4 &amp;rarr; block)" vertex="1">
+          <mxGeometry height="60" width="170" x="480" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-15" parent="1" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#f3e5f5;strokeColor=#7B1FA2;fontStyle=1;fontSize=14;" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;Azure OpenAI /&amp;nbsp;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Foundry Model&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="150" width="1600" x="557" y="915" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-16" parent="_Yn_IapjeTjKeZJcNFmz-15" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#7B1FA2;strokeWidth=2;fontSize=11;" value="Azure OpenAI / Foundry deployment&#xa;(gpt-5, approved model)" vertex="1">
+          <mxGeometry height="60" width="170" x="840" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-17" parent="1" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=14;" value="Application Insights" vertex="1">
+          <mxGeometry height="150" width="1600" x="557" y="1065" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-18" parent="_Yn_IapjeTjKeZJcNFmz-17" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;strokeWidth=2;fontSize=11;" value="Token usage metrics + dimensions&#xa;(API, product, subscription)" vertex="1">
+          <mxGeometry height="60" width="170" x="1200" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-19" edge="1" parent="1" source="_Yn_IapjeTjKeZJcNFmz-3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=2;" target="_Yn_IapjeTjKeZJcNFmz-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-20" edge="1" parent="1" source="_Yn_IapjeTjKeZJcNFmz-7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=2;" target="_Yn_IapjeTjKeZJcNFmz-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-21" edge="1" parent="1" source="_Yn_IapjeTjKeZJcNFmz-8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=2;fontSize=10;" target="_Yn_IapjeTjKeZJcNFmz-14" value="Shield prompt call">
+          <mxGeometry relative="1" x="0.006" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1045" y="765" />
+              <mxPoint x="1070" y="765" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-22" edge="1" parent="1" source="_Yn_IapjeTjKeZJcNFmz-14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00897B;strokeWidth=2;fontSize=10;" target="_Yn_IapjeTjKeZJcNFmz-9" value="Safety verdict: allowed">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-23" edge="1" parent="1" source="_Yn_IapjeTjKeZJcNFmz-14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C62828;strokeWidth=2;dashed=1;fontSize=10;" target="_Yn_IapjeTjKeZJcNFmz-4" value="If severity &amp;ge; 4: block (403)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-24" edge="1" parent="1" source="_Yn_IapjeTjKeZJcNFmz-9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=2;" target="_Yn_IapjeTjKeZJcNFmz-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-25" edge="1" parent="1" source="_Yn_IapjeTjKeZJcNFmz-10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=2;fontSize=10;" target="_Yn_IapjeTjKeZJcNFmz-16" value="Model inference call">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1410" y="840" />
+              <mxPoint x="1430" y="840" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-26" edge="1" parent="1" source="_Yn_IapjeTjKeZJcNFmz-16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00897B;strokeWidth=2;fontSize=10;" target="_Yn_IapjeTjKeZJcNFmz-11" value="Completion tokens">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-27" edge="1" parent="1" source="_Yn_IapjeTjKeZJcNFmz-11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=2;" target="_Yn_IapjeTjKeZJcNFmz-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-28" edge="1" parent="1" source="_Yn_IapjeTjKeZJcNFmz-12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5C6BC0;strokeWidth=2;dashed=1;fontSize=10;" target="_Yn_IapjeTjKeZJcNFmz-18" value="Emit token metrics">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_Yn_IapjeTjKeZJcNFmz-29" edge="1" parent="1" source="_Yn_IapjeTjKeZJcNFmz-12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00897B;strokeWidth=2;fontSize=10;" target="_Yn_IapjeTjKeZJcNFmz-5" value="8. Return completion">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,64 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Two-Layer AI Governance Model" id="two-layer-ai-governance">
+    <mxGraphModel dx="3494" dy="818" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="note1" parent="1" style="text;html=1;strokeColor=#666666;fillColor=#f5f5f5;align=left;verticalAlign=top;spacingLeft=10;rounded=1;fontSize=12;" value="&lt;b&gt;Two governance layers&lt;/b&gt;&lt;br&gt;&amp;bull; Azure Policy &amp;mdash; controls what can be deployed and how resources are configured&lt;br&gt;&amp;bull; API Management &amp;mdash; controls what happens when applications consume those resources" vertex="1">
+          <mxGeometry height="110" width="680" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="app" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontStyle=1;" value="Applications / Consumers&#xa;(AI-enabled apps)" vertex="1">
+          <mxGeometry height="100" width="180" x="-60" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="apim" parent="1" style="swimlane;startSize=30;html=1;fillColor=#fff3e0;strokeColor=#e6821e;strokeWidth=3;fontStyle=1;fontSize=13;" value="API Management &amp;mdash; AI Gateway&#xa;(Runtime Governance)" vertex="1">
+          <mxGeometry height="380" width="340" x="300" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="tok" parent="apim" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e6821e;strokeWidth=2;" value="llm-token-limit&#xa;(token quota per subscription)" vertex="1">
+          <mxGeometry height="60" width="300" x="20" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="cscheck" parent="apim" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e6821e;strokeWidth=2;" value="llm-content-safety&#xa;(shield-prompt, block by threshold)" vertex="1">
+          <mxGeometry height="60" width="300" x="20" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="metric" parent="apim" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e6821e;strokeWidth=2;" value="llm-emit-token-metric&#xa;(usage &amp;rarr; Application Insights)" vertex="1">
+          <mxGeometry height="60" width="300" x="20" y="195" as="geometry" />
+        </mxCell>
+        <mxCell id="route" parent="apim" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e6821e;strokeWidth=2;" value="Route only to approved model deployments" vertex="1">
+          <mxGeometry height="60" width="300" x="20" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="resboundary" parent="1" style="swimlane;startSize=30;html=1;fillColor=#e6f4ea;strokeColor=#2e7d32;strokeWidth=4;fontStyle=1;fontSize=13;" value="Azure AI Resource Boundary Enforced by Azure Policy" vertex="1">
+          <mxGeometry height="560" width="600" x="780" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="foundry" parent="resboundary" style="swimlane;startSize=26;html=1;fillColor=#f3e5f5;strokeColor=#7B1FA2;strokeWidth=2;" value="Azure AI Foundry Account" vertex="1">
+          <mxGeometry height="210" width="540" x="30" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="model" parent="foundry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#7B1FA2;strokeWidth=2;" value="Model deployments&#xa;gpt-5 &amp;mdash; approved via allowedAssetIds" vertex="1">
+          <mxGeometry height="60" width="500" x="20" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="fid" parent="foundry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#7B1FA2;strokeWidth=2;" value="Managed identity + Private Link&#xa;Local key authentication disabled" vertex="1">
+          <mxGeometry height="55" width="500" x="20" y="115" as="geometry" />
+        </mxCell>
+        <mxCell id="safety" parent="resboundary" style="swimlane;startSize=26;html=1;fillColor=#f3e5f5;strokeColor=#7B1FA2;strokeWidth=2;" value="Azure AI Content Safety" vertex="1">
+          <mxGeometry height="115" width="540" x="30" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="csbackend" parent="safety" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#7B1FA2;strokeWidth=2;" value="Hate / Violence category thresholds&#xa;(severity &amp;ge; 4 &amp;rarr; block)" vertex="1">
+          <mxGeometry height="55" width="500" x="20" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="polnote" parent="resboundary" style="text;html=1;strokeColor=#d6b656;fillColor=#fff9cc;align=left;verticalAlign=top;spacingLeft=10;rounded=1;fontSize=12;" value="&lt;b&gt;Key Azure Policy definitions&lt;/b&gt;&lt;br&gt;&amp;bull; Restrict network access (Audit/Deny)&lt;br&gt;&amp;bull; Disable local authentication (key access)&lt;br&gt;&amp;bull; Diagnostic logs enabled (AuditIfNotExists)&lt;br&gt;&amp;bull; Approved model deployments only (allowedAssetIds)" vertex="1">
+          <mxGeometry height="130" width="540" x="30" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="e-app-apim" edge="1" parent="1" source="app" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=2;fontSize=11;" target="apim" value="HTTPS request (chat/completions)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-apim-foundry" edge="1" parent="1" source="apim" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=2;fontSize=11;" target="foundry" value="Approved model inference">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-apim-safety" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#F57C00;strokeWidth=2;dashed=1;fontSize=11;entryX=-0.005;entryY=0.642;entryDx=0;entryDy=0;entryPerimeter=0;" target="csbackend" value="Prompt shield check">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="640" y="390" as="sourcePoint" />
+            <mxPoint x="810" y="427.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
