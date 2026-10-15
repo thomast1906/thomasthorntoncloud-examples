@@ -1,0 +1,66 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="MBJF-gIwO1yKpcF3OjVB">
+    <mxGraphModel dx="1958" dy="1121" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="rg" parent="1" style="swimlane;startSize=30;html=1;fillColor=#f4f8fb;strokeColor=#6c8ebf;strokeWidth=2;fontSize=16;fontStyle=1;" value="Azure Resource Group" vertex="1">
+          <mxGeometry height="680" width="1120" x="410" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="env" parent="rg" style="swimlane;startSize=30;html=1;fillColor=#e6f4ea;strokeColor=#82b366;strokeWidth=2;fontSize=14;fontStyle=1;" value="Azure Container Apps environment" vertex="1">
+          <mxGeometry height="500" width="360" x="30" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="collector" parent="env" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=https://app.diagrams.net/img/lib/azure2/other/Worker_Container_App.svg;verticalLabelPosition=bottom;verticalAlign=top;" value="OpenTelemetry Collector Contrib" vertex="1">
+          <mxGeometry height="66" width="68" x="135" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="collectorinfo" parent="env" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;" value="OTLP/HTTP on :4318&#xa;1 replica · memory batch&#xa;Secrets: ingest token + connection string" vertex="1">
+          <mxGeometry height="100" width="280" x="40" y="185" as="geometry" />
+        </mxCell>
+        <mxCell id="appinsights" parent="rg" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=https://app.diagrams.net/img/lib/azure2/devops/Application_Insights.svg;verticalLabelPosition=bottom;verticalAlign=top;" value="Application Insights" vertex="1">
+          <mxGeometry height="92" width="64" x="500" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="workspace" parent="rg" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=https://app.diagrams.net/img/lib/azure2/analytics/Log_Analytics_Workspaces.svg;verticalLabelPosition=bottom;verticalAlign=top;" value="Log Analytics workspace" vertex="1">
+          <mxGeometry height="72" width="72" x="840" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="workbooknote" parent="rg" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e6821e;fontSize=12;" value="KQL queries and Workbooks" vertex="1">
+          <mxGeometry height="60" width="180" x="788" y="385" as="geometry" />
+        </mxCell>
+        <mxCell id="e-collector-ai" edge="1" parent="rg" source="collector" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00897B;strokeWidth=2;fontSize=12;libavoidRouting=1;" target="appinsights" value="Traces · metrics · logs">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="367" y="178" />
+              <mxPoint x="367" y="226" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-ai-workspace" edge="1" parent="rg" source="appinsights" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5C6BC0;strokeWidth=2;dashed=1;fontSize=12;libavoidRouting=1;" target="workspace" value="Workspace-based resource">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-workspace-query" edge="1" parent="rg" source="workspace" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5C6BC0;strokeWidth=2;fontSize=12;libavoidRouting=1;" target="workbooknote" value="Query and visualize">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="876" y="324" />
+              <mxPoint x="878" y="324" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="client" parent="1" style="shape=image;html=1;verticalAlign=top;verticalLabelPosition=bottom;labelBackgroundColor=default;imageAspect=0;aspect=fixed;image=https://icons.diagrams.net/assets/tabler-outline/1/Brand_Github_Copilot.svg" value="GitHub Copilot CLI" vertex="1">
+          <mxGeometry height="72" width="72" x="100" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="clientnote" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;fontSize=12;fontColor=#333333;" value="Client receives the&#xa;ingestion token only" vertex="1">
+          <mxGeometry height="50" width="170" x="55" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="e-client-collector" edge="1" parent="1" source="client" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=3;fontSize=12;libavoidRouting=1;" target="collector" value="HTTPS · OTLP/HTTP · Bearer">
+          <mxGeometry relative="1" x="-0.1018" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="136" y="268" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
