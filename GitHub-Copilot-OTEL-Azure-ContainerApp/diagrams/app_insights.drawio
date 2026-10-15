@@ -1,0 +1,73 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="WuV6hu4QHAGfF2coR8hp">
+    <mxGraphModel dx="2358" dy="1121" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="client" parent="1" style="shape=image;html=1;verticalAlign=top;verticalLabelPosition=bottom;labelBackgroundColor=default;imageAspect=0;aspect=fixed;image=https://icons.diagrams.net/assets/tabler-outline/1/Brand_Github_Copilot.svg" value="GitHub Copilot CLI&#xa;content capture: off" vertex="1">
+          <mxGeometry height="72" width="72" x="12" y="117" as="geometry" />
+        </mxCell>
+        <mxCell id="collector" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f4ea;strokeColor=#82b366;strokeWidth=2;fontSize=14;fontStyle=1;" value="Authenticated OTLP/HTTP&#xa;Collector" vertex="1">
+          <mxGeometry height="90" width="190" x="216" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="appinsights" parent="1" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=https://app.diagrams.net/img/lib/azure2/devops/Application_Insights.svg;verticalLabelPosition=bottom;verticalAlign=top;" value="Application Insights" vertex="1">
+          <mxGeometry height="92" width="64" x="574" y="107" as="geometry" />
+        </mxCell>
+        <mxCell id="metrics" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f4f8;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;" value="customMetrics&#xa;Token usage aggregates&#xa;gen_ai.client.inference.usage.*&#xa;Model: gen_ai.response.model" vertex="1">
+          <mxGeometry height="130" width="290" x="874" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="dependencies" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e6821e;strokeWidth=2;fontSize=13;" value="dependencies&#xa;Model and tool execution detail&#xa;execute_tool skill:&#xa;customDimensions[gen_ai.skill.name]" vertex="1">
+          <mxGeometry height="130" width="290" x="874" y="365" as="geometry" />
+        </mxCell>
+        <mxCell id="traces" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#777777;strokeWidth=2;fontSize=13;" value="traces&#xa;Optional span-event diagnostics" vertex="1">
+          <mxGeometry height="90" width="290" x="874" y="85" as="geometry" />
+        </mxCell>
+        <mxCell id="contentnote" parent="1" style="text;html=1;strokeColor=none;fillColor=#fff9cc;align=left;verticalAlign=middle;spacingLeft=10;fontSize=12;fontColor=#5b4b00;" value="Operational metadata stays useful without sending prompt or response content." vertex="1">
+          <mxGeometry height="55" width="500" x="338" as="geometry" />
+        </mxCell>
+        <mxCell id="e-client-collector" edge="1" parent="1" source="client" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=2;fontSize=12;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="collector" value="OTLP/HTTP">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="150" y="153" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-collector-ai" edge="1" parent="1" source="collector" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00897B;strokeWidth=2;fontSize=12;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="appinsights" value="Azure Monitor exporter">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="500" y="153" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-ai-metrics" edge="1" parent="1" source="appinsights" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=2;fontSize=12;curved=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="metrics" value="Aggregate measurements">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="64.5" as="offset" />
+            <Array as="points">
+              <mxPoint x="684" y="153" />
+              <mxPoint x="684" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-ai-dependencies" edge="1" parent="1" source="appinsights" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#e6821e;strokeWidth=2;fontSize=12;curved=0;exitX=1;exitY=0.75;entryX=0;entryY=0.5;" target="dependencies" value="Model and tool details">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="98" y="35" as="offset" />
+            <Array as="points">
+              <mxPoint x="674" y="176" />
+              <mxPoint x="674" y="430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-ai-traces" edge="1" parent="1" source="appinsights" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#777777;strokeWidth=2;dashed=1;fontSize=12;curved=0;exitX=1;exitY=0.25;entryX=0;entryY=0.5;" target="traces" value="If span events enabled">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="6" as="offset" />
+            <Array as="points">
+              <mxPoint x="766" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
